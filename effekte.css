@@ -1,0 +1,99 @@
+/* konto-effekte aus dem shop: animierte profil-hintergründe (body[data-fxbg]) und namens-effekte (.fxTag-*) */
+
+/* ---------- namens-effekte (text) ---------- */
+.fxTag-gold, .fxTag-regenbogen {
+  background-clip: text; -webkit-background-clip: text; color: transparent; -webkit-text-fill-color: transparent;
+  background-size: 250% 100%;
+}
+.fxTag-gold { background-image: linear-gradient(100deg, #a8741a 10%, #ffe9a0 30%, #d4af37 50%, #fff3c4 70%, #a8741a 90%); animation: fxGlanz 3s linear infinite; }
+.fxTag-regenbogen { background-image: linear-gradient(90deg, #ff4d4d, #ffb347, #ffe14d, #4dff88, #4dc9ff, #a24dff, #ff4dd8, #ff4d4d); animation: fxGlanz 4s linear infinite; background-size: 300% 100%; }
+.fxTag-neon { color: #fff; animation: fxNeon 1.8s ease-in-out infinite alternate; }
+.fxTag-feuer { color: #ffe08a; animation: fxFeuer 0.35s steps(2, end) infinite alternate; }
+.fxTag-glitch { color: #fff; animation: fxGlitch 2.4s steps(1, end) infinite; }
+@keyframes fxGlanz { to { background-position: -250% 0; } }
+@keyframes fxNeon {
+  from { text-shadow: 0 0 4px #fff, 0 0 10px #ff2bd6, 0 0 22px #ff2bd6, 0 0 40px #ff2bd6; }
+  to { text-shadow: 0 0 3px #fff, 0 0 8px #2bd9ff, 0 0 18px #2bd9ff, 0 0 34px #2bd9ff; }
+}
+@keyframes fxFeuer {
+  from { text-shadow: 0 -1px 3px #ffd34d, 0 -4px 8px #ff8a1f, 0 -8px 14px #ff3d00, 0 -12px 22px #b81d00; }
+  to { text-shadow: 0 -2px 4px #ffd34d, 0 -6px 10px #ff8a1f, 0 -10px 16px #ff3d00, 0 -16px 26px #b81d00; }
+}
+@keyframes fxGlitch {
+  0%, 84%, 100% { text-shadow: none; transform: none; }
+  85% { text-shadow: 3px 0 #ff2b4d, -3px 0 #2bd9ff; transform: translateX(1px); }
+  88% { text-shadow: -3px 0 #ff2b4d, 3px 0 #2bd9ff; transform: translateX(-2px); }
+  92% { text-shadow: 2px 1px #ff2b4d, -2px -1px #2bd9ff; transform: skewX(-6deg); }
+}
+
+/* ---------- profil-hintergründe (ganze seite) ---------- */
+body.seite[data-fxbg] { background-attachment: fixed; }
+body.seite[data-fxbg]::before { content: ""; position: fixed; inset: 0; z-index: -1; pointer-events: none; }
+
+body.seite[data-fxbg="aurora"] { background: #06121c; }
+body.seite[data-fxbg="aurora"]::before {
+  background:
+    radial-gradient(ellipse 80% 50% at 20% 30%, #2bffb088, transparent 70%),
+    radial-gradient(ellipse 70% 45% at 75% 25%, #7a4dff88, transparent 70%),
+    radial-gradient(ellipse 90% 50% at 50% 60%, #2bd9ff55, transparent 70%);
+  background-size: 160% 160%;
+  animation: fxAurora 14s ease-in-out infinite alternate;
+}
+@keyframes fxAurora { from { background-position: 0% 0%; filter: hue-rotate(0deg); } to { background-position: 100% 60%; filter: hue-rotate(70deg); } }
+
+body.seite[data-fxbg="sterne"] { background: radial-gradient(ellipse at 50% 120%, #1b2a55, #050912 70%); }
+body.seite[data-fxbg="sterne"]::before {
+  background-image:
+    radial-gradient(1.5px 1.5px at 20px 30px, #fff, transparent 60%),
+    radial-gradient(1px 1px at 90px 80px, #cfe0ff, transparent 60%),
+    radial-gradient(2px 2px at 150px 20px, #fff, transparent 60%),
+    radial-gradient(1px 1px at 60px 140px, #ffe9c0, transparent 60%),
+    radial-gradient(1.5px 1.5px at 180px 110px, #fff, transparent 60%);
+  background-size: 220px 180px;
+  animation: fxSterne 3s ease-in-out infinite alternate, fxSterneZug 120s linear infinite;
+}
+@keyframes fxSterne { from { opacity: 0.45; } to { opacity: 1; } }
+@keyframes fxSterneZug { to { background-position: 220px 180px; } }
+
+body.seite[data-fxbg="synth"] { background: linear-gradient(#150a33 0%, #4b1a73 45%, #ff3d9a 62%, #1a0a33 62.2%); }
+body.seite[data-fxbg="synth"]::before {
+  top: 62%;
+  background:
+    repeating-linear-gradient(90deg, #ff3d9a66 0 2px, transparent 2px 70px),
+    repeating-linear-gradient(0deg, #2bd9ff66 0 2px, transparent 2px 46px);
+  transform: perspective(300px) rotateX(55deg); transform-origin: top;
+  animation: fxSynth 1.6s linear infinite;
+}
+@keyframes fxSynth { to { background-position: 0 46px, 0 46px; } }
+
+body.seite[data-fxbg="lava"] { background: #1a0600; }
+body.seite[data-fxbg="lava"]::before {
+  background:
+    radial-gradient(circle at 25% 80%, #ff6a00cc 0, transparent 35%),
+    radial-gradient(circle at 70% 70%, #ff2b00bb 0, transparent 40%),
+    radial-gradient(circle at 50% 100%, #ffc400aa 0, transparent 45%);
+  background-size: 140% 140%;
+  animation: fxLava 9s ease-in-out infinite alternate;
+}
+@keyframes fxLava { from { background-position: 0% 100%; filter: brightness(0.8); } to { background-position: 60% 70%; filter: brightness(1.25); } }
+
+body.seite[data-fxbg="matrix"] { background: #010a03; }
+body.seite[data-fxbg="matrix"]::before {
+  background:
+    repeating-linear-gradient(90deg, transparent 0 22px, #00ff5a22 22px 24px),
+    repeating-linear-gradient(180deg, transparent 0 60px, #00ff5acc 60px 66px, transparent 66px 140px);
+  background-size: 100% 100%, 24px 280px;
+  -webkit-mask-image: linear-gradient(#000, #0006);
+  mask-image: linear-gradient(#000, #0006);
+  animation: fxMatrix 2.4s linear infinite;
+}
+@keyframes fxMatrix { to { background-position: 0 0, 0 280px; } }
+
+@media (prefers-reduced-motion: reduce) {
+  [class*="fxTag-"], body.seite[data-fxbg]::before { animation: none !important; }
+}
+
+/* ---------- shop: auswahl der effekte ---------- */
+.fxWahl { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+.fxWahl button { padding: 6px 12px; border: 1px solid var(--line); border-radius: 999px; background: #ffffff10; color: var(--text); font: 600 13px system-ui, sans-serif; cursor: pointer; }
+.fxWahl button.aktiv { border-color: var(--accent); background: var(--accent-soft); }

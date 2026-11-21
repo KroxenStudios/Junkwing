@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Junkwing – Help</title>
+  <style>
+    :root { color-scheme: dark; --accent: #ffb547; }
+    body { margin: 0; background: #0c1522; color: #eef4ff; font: 15px/1.55 system-ui, sans-serif; }
+    main { max-width: 760px; margin: 0 auto; padding: 28px 18px 60px; }
+    h1 { color: var(--accent); margin: 0 0 4px; }
+    h2 { margin: 28px 0 8px; font-size: 18px; }
+    a { color: #ffd38a; }
+    table { width: 100%; border-collapse: collapse; margin: 6px 0; }
+    td { padding: 6px 8px; border-bottom: 1px solid #ffffff18; vertical-align: top; }
+    td:first-child { width: 34%; color: #f3e3c8; font-weight: 600; }
+    kbd { padding: 1px 6px; border-radius: 5px; background: #ffffff1a; border: 1px solid #ffffff30; font: 600 12.5px system-ui, sans-serif; }
+    .muted { color: #a9bad0; }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>Junkwing</h1>
+    <p class="muted">Build a vehicle from parts on your parking lot and drive around with the other players. <a href="index.html">Back to the game</a></p>
+
+    <h2>Building</h2>
+    <table>
+      <tr><td>Place a part</td><td>Pick a part on the left, then left-click a surface or the floor of the parking lot. The preview is <b style="color:#46e07a">green</b> = connected, <b style="color:#ffd43b">yellow</b> = loose, <b style="color:#ff4040">red</b> = not possible.</td></tr>
+      <tr><td>Remove a part</td><td>Right-click (or the “Remove” tool)</td></tr>
+      <tr><td>Adjust a part</td><td>Middle-click or <kbd>Alt</kbd>+click (or the “Adjust” tool): colour, keys, steering angle, thrust …</td></tr>
+      <tr><td>Rotate / tilt</td><td><kbd>R</kbd> rotates the next part, <kbd>T</kbd> tilts blocks and wedges. Attachments (wheels, exhaust, engines …) align to the surface you click.</td></tr>
+      <tr><td>View</td><td>Drag to rotate, right-drag or <kbd>Shift</kbd>+drag to pan, mouse wheel to zoom, <kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> to move.</td></tr>
+      <tr><td>Check connections</td><td><kbd>V</kbd> colours every rigid body differently. Everything in one colour is firmly connected.</td></tr>
+      <tr><td>Undo</td><td><kbd>Ctrl</kbd>+<kbd>Z</kbd></td></tr>
+      <tr><td>Hangar</td><td>The “Hangar” button in the build panel (or 📦 at the top): a full-screen page with a “Presets” tab (kart, dragster, shopping cart, off-roader, plane, crane truck, truck with trailer, plus the bigger projects: coach with 13 seats, space rocket, propeller plane, fire truck with ladder and water tank, propeller buggy and a train with two detachable cars). Also vehicles from other players. A loaded vehicle replaces your current one; undo brings it back.</td></tr>
+    </table>
+    <p class="muted">Parts connect when they touch with connecting faces. Unconnected parts don't move with the vehicle – unless a force acts on them (a loose engine flies off on its own). Your design is saved in the browser.</p>
+
+    <h2>Parts</h2>
+    <table>
+      <tr><td>Seat</td><td>This is where you sit. You can build as many seats as you like. The first seat built defines “forward” for throttle and steering. Press <kbd>X</kbd> to get out and back in – into any free seat nearby, even in other players' vehicles (then you ride along). Or just click (or tap) a seat. Only your own vehicle is steered, and only while you sit in one of its seats.</td></tr>
+      <tr><td>Block, slab, wedge, corner wedge</td><td>Body and frame.</td></tr>
+      <tr><td>Steerable wheel</td><td>Steers with <kbd>A</kbd>/<kbd>D</kbd>; maximum steering angle adjustable. Wheels behind the centre of mass steer in the opposite direction automatically (adjustable).</td></tr>
+      <tr><td>Fixed wheel</td><td>Only rolls straight. Driven or free-rolling.</td></tr>
+      <tr><td>Caster wheel</td><td>Swivels freely through 360° in the direction of travel, no drive.</td></tr>
+      <tr><td>Exhaust</td><td>Exhaust smoke while the engine runs (<kbd>M</kbd>). Colour adjustable.</td></tr>
+      <tr><td>Fog generator</td><td>Fog at the press of a key (default <kbd>F</kbd>), even with the engine off. Colour adjustable.</td></tr>
+      <tr><td>Jet engine</td><td>Continuous thrust while the key is held (default <kbd>Shift</kbd>).</td></tr>
+      <tr><td>Rocket engine</td><td>Very strong thrust for a few seconds (default <kbd>R</kbd>), then it recharges.</td></tr>
+      <tr><td>Wing</td><td>Flat plate that creates lift and drag in the airflow. Lift needs an angle of attack (nose slightly up or the surface tilted); above about 17° the flow stalls. Effective area adjustable.</td></tr>
+      <tr><td>Control surface</td><td>Like the wing, but its trailing edge (yellow) can be tilted. Channel <b>Pitch</b> (elevator, <kbd>↓</kbd> = nose up), <b>Roll</b> (aileron, <kbd>←</kbd><kbd>→</kbd>, set left and right to “opposite”) or <b>Yaw</b> (rudder, built upright, <kbd>Q</kbd><kbd>E</kbd>). Deflection and keys adjustable. The arrow keys no longer steer wheels – use WASD for that.</td></tr>
+      <tr><td>Camera</td><td>A key (default <kbd>V</kbd>, further cameras <kbd>B</kbd>, <kbd>N</kbd> …) switches the view to that camera; press again to return. The camera looks in the direction of its lens, moves with its part and also works when you got out or the camera lies around loose. Field of view adjustable.</td></tr>
+      <tr><td>Headlight</td><td>Shines in the direction of the lens; the key (default <kbd>L</kbd>) switches it on and off. Colour adjustable. The four nearest lit headlights cast a real light cone.</td></tr>
+      <tr><td>Ladder</td><td>Climb on foot: at the ladder press <kbd>W</kbd>/<kbd>S</kbd>, <kbd>Space</kbd> jumps off. Several stacked make a long ladder; rotate it with <kbd>R</kbd>/<kbd>T</kbd>.</td></tr>
+      <tr><td>Propeller engine</td><td>Thrust like a propeller: <kbd>G</kbd> more, <kbd>H</kbd> less throttle (the setting stays). Thrust falls with speed (top speed adjustable) and in thin air, and there is none in space. Fast-spinning blades blur into a disc.</td></tr>
+      <tr><td>Fuel tank</td><td>Fuel for jet engines, propellers and the drive motor (rockets have their own). If a vehicle has tanks, nothing runs without fuel – each part only gets fuel from tanks firmly connected to it. Without a tank, fuel use is off. <kbd>K</kbd> switches fuel use off and on (fuel is then unlimited). The fill level is shown next to the speed.</td></tr>
+      <tr><td>Parachute</td><td>A key (default <kbd>P</kbd>) opens it, press again to pack it. Brakes through air drag: the faster, the stronger – also when falling after jumps. Size and colour adjustable.</td></tr>
+      <tr><td>Servo motor</td><td>Whatever hangs on the turntable on top turns against the rest (default <kbd>Q</kbd>/<kbd>E</kbd>). Mode “hold angle” with a limit, or “continuous rotation”.</td></tr>
+      <tr><td>Aiming motor</td><td>Servo motors and micro drives have the setting <em>aiming motor</em>. They then turn the weapon on their head (gun or rapid-fire cannon) automatically towards the point you point at with the mouse or tap with your finger. The crosshair shows the target point and its distance; the flight path is led. With two motors (yaw and tilt) you aim anywhere within their range. Turn the view with the right mouse button then. Each motor keeps its keys; it is best to give each its own.</td></tr>
+      <tr><td>Binding mouse buttons</td><td>Wherever a key is set (for example <em>Shoot</em>), you can press a mouse button instead: left, middle, right, back or forward. On phones the binding appears as a button like any key.</td></tr>
+      <tr><td>Breakaway joint</td><td>Holds both sides firmly together until you press its key (default <kbd>1</kbd>, <kbd>2</kbd>, …). Then the parts separate.</td></tr>
+      <tr><td>Explosive</td><td>Detonates once with its key (default <kbd>Z</kbd>): a flash severs every connection within its <em>range</em> (in metres) and pushes the parts away from the charge with the set <em>force</em> (kN).</td></tr>
+      <tr><td>Armoured block</td><td>Very heavy and blast-proof: its connections hold even in explosions, and a body containing an armoured block is not thrown away.</td></tr>
+      <tr><td>Engine</td><td>Drives the wheels wherever it sits. Set the power (hp) in the inspector; several engines add up and more power burns more fuel.</td></tr>
+      <tr><td>Cannon</td><td>Barrel with adjustable calibre (25–155 mm), fight mode only. It fires away from the breech.</td></tr>
+      <tr><td>Cannon breech</td><td>Fires through the attached barrel with its key. Thicker than the calibre: the shell goes off inside the barrel. Thinner: slower and less accurate.</td></tr>
+      <tr><td>Ammo rack</td><td>Rounds of one calibre; the breech needs a rack matching its shell diameter on the same rigid part of the vehicle. Right next to the breech it reloads twice as fast. A hit makes the rest explode.</td></tr>
+      <tr><td>Shell types</td><td><b>HE</b> (high explosive) blasts the surroundings. <b>AP</b> (armour piercing) has little area effect but hits one part hard and wears armoured blocks down fast. <b>HEAT</b> (shaped charge) punches through blocks (armoured blocks cost more) but does less damage than AP. Each ammo rack holds one type; the breech uses the type you set, <kbd>C</kbd> cycles it in the game.</td></tr>
+      <tr><td>“Tank” preset</td><td>Hull with six wheels, turret (<kbd>Q</kbd>/<kbd>E</kbd> turns it), 90 mm cannon (<kbd>↑</kbd>/<kbd>↓</kbd> raises and lowers it), fire <kbd>X</kbd>.</td></tr>
+    </table>
+
+    <h2>Driving</h2>
+    <table>
+      <tr><td>Drive / back</td><td>Button at the bottom right or <kbd>Tab</kbd></td></tr>
+      <tr><td>Throttle, reverse, steer</td><td><kbd>W</kbd> <kbd>S</kbd> <kbd>A</kbd> <kbd>D</kbd></td></tr>
+      <tr><td>Brake</td><td><kbd>Space</kbd></td></tr>
+      <tr><td>Engine on/off</td><td><kbd>M</kbd></td></tr>
+      <tr><td>Camera</td><td>Drag to rotate, mouse wheel to zoom, <kbd>C</kbd> (or the 👁 button) switches the view: chase far, chase close, first person. In first person, dragging turns your head (on foot: your walking direction).</td></tr>
+      <tr><td>Get out / get in</td><td><kbd>X</kbd>. On foot: WASD to walk, <kbd>Space</kbd> to jump, <kbd>Shift</kbd> to run. Without a driver the vehicle stands with the brake on.</td></tr>
+      <tr><td>Restart</td><td><kbd>Backspace</kbd> (the vehicle stands intact on the parking lot again)</td></tr>
+      <tr><td>Chat</td><td><kbd>Enter</kbd></td></tr>
+      <tr><td>Phone / tablet</td><td>Joystick on the left to drive, buttons on the right for brake and all parts with keys.</td></tr>
+    </table>
+
+    <h2>The map</h2>
+    <p class="muted">Around the flat arena with the parking lots lies a large landscape of 6.4 × 6.4 km: hills, valleys, mountains, forests, roads, eight villages and radio towers. The map was generated once and is the same for all players. A ring of mountains surrounds it. The roads lead from the arena to the villages; you can take off with the plane from the runway (east of the obstacles).</p>
+
+    <h2>Altitude and space</h2>
+    <p class="muted">The air gets thinner with altitude: wings, control surfaces and parachute lose their effect, rockets and engines do not. Between roughly 3000 and 7000 m gravity fades away; above that you are weightless in black space with stars and a small Earth. Your altitude is shown next to your speed. If you sink again, gravity pulls you back from about 3000 m.</p>
+
+    <h2>Fight</h2>
+    <p class="muted">Pick Fight or Test in the mode field above “Play”. In Fight you capture bases (30 seconds; several drivers at once slow or pause it) and collect points. Hits and explosions destroy parts: wheels can fall off, armoured blocks only take so much, full tanks explode.</p>
+    <p class="muted"><b>Maps:</b> “Load / share maps” opens the map window (like the hangar): manage your maps, load other players’ maps, play and upload them. In the map editor you build terrain, buildings, rocks, trees, bases and spawn points and test the map right away. KroxenStudios maintains the official maps.</p>
+    <p class="muted"><b>Queue and NPCs:</b> “Play” in Fight mode (online, official map) puts you in the queue. A match starts with four participants. The longer you wait, the more NPC tanks fill the slots (one every 6 seconds, up to three). The first player in the queue controls the NPCs; if they leave the game, the NPCs vanish. “Start now without waiting” skips the wait.</p>
+
+    <h2>Online</h2>
+    <p class="muted">Up to 20 players per room (five public rooms and private ones via the 🚪 button), everyone gets a parking lot. Each browser simulates the physics of its own vehicle and sends the position of its parts to the server; the others see them and can drive into them. You set name and look in your <a href="konto.html#charakter">account</a> (no sign-in needed). The name must not equal another account's username. Nothing is stored on the server in the room; an account is optional.</p>
+  </main>
+</body>
+</html>

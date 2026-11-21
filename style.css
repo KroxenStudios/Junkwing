@@ -1,0 +1,1099 @@
+:root {
+  color-scheme: dark;
+  --accent: #ffb547;
+  --accent-soft: #ffb54733;
+  --panel: #0c1522cc;
+  --panel-solid: #0c1522ee;
+  --line: #ffffff22;
+  --text: #eef4ff;
+  --muted: #a9bad0;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  background: #0c1522;
+  color: var(--text);
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  overflow: hidden;
+  background: #0c1522;
+}
+
+button, input, select { font: inherit; }
+button { color: var(--text); cursor: pointer; }
+
+#game {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  background: #a9dbf5;
+}
+
+#scene {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  touch-action: none;
+}
+
+/* kopfzeile */
+#hud {
+  position: absolute;
+  z-index: 4;
+  top: 12px;
+  left: 12px;
+  right: 12px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-height: 44px;
+  padding: 8px 16px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--panel);
+  box-shadow: 0 10px 34px #0004;
+  backdrop-filter: blur(14px) saturate(1.3);
+  pointer-events: none;
+}
+
+#hud strong { font-size: 17px; letter-spacing: 0.04em; color: var(--accent); }
+
+#status { display: flex; align-items: center; gap: 7px; color: var(--muted); font-size: 13px; }
+#status::before {
+  content: "";
+  width: 9px; height: 9px;
+  border-radius: 50%;
+  background: #f2c14e;
+  box-shadow: 0 0 8px #f2c14e99;
+}
+#status[data-state="online"]::before { background: #62e6b2; box-shadow: 0 0 8px #62e6b2; }
+#status[data-state="offline"]::before { background: #ff6b6b; box-shadow: 0 0 8px #ff6b6b99; }
+
+#tacho { font-variant-numeric: tabular-nums; font-weight: 700; font-size: 15px; min-width: 76px; }
+
+#hud a {
+  color: #f3e3c8;
+  font-size: 14px;
+  text-decoration: none;
+  pointer-events: auto;
+  padding: 5px 11px;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+#hud a:first-of-type { margin-left: auto; }
+#hud a:hover { background: var(--accent-soft); color: #fff; }
+
+#laden {
+  position: absolute;
+  z-index: 3;
+  left: 50%;
+  top: 45%;
+  transform: translate(-50%, -50%);
+  padding: 12px 20px;
+  border-radius: 12px;
+  background: var(--panel-solid);
+}
+#laden[hidden] { display: none; }
+
+#hint, #meldung {
+  position: absolute;
+  z-index: 3;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 8px 14px;
+  border-radius: 999px;
+  background: var(--panel);
+  color: var(--muted);
+  font-size: 13px;
+  pointer-events: none;
+  text-align: center;
+  max-width: calc(100vw - 32px);
+}
+#hint { top: 68px; }
+#hint[hidden] { display: none; }
+#meldung { top: 108px; color: #fff; background: #3a1d0ccc; opacity: 0; transition: opacity 0.25s; }
+#meldung.zeigen { opacity: 1; }
+
+/* seitenleisten */
+.panel {
+  position: absolute;
+  z-index: 3;
+  top: 68px;
+  width: 268px;
+  max-height: calc(100% - 150px);
+  overflow-y: auto;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: var(--panel);
+  backdrop-filter: blur(14px) saturate(1.3);
+  box-shadow: 0 10px 34px #0004;
+  font-size: 13px;
+}
+.panel[hidden] { display: none; }
+#baupanel { left: 12px; }
+#inspector, #fahrpanel { right: 12px; }
+
+.panel .kopf {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+  color: var(--muted);
+}
+.panel .kopf b { color: var(--text); }
+.panel h3 { margin: 10px 0 6px; font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+
+.panel button {
+  padding: 6px 9px;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  background: #ffffff10;
+  font-size: 12.5px;
+}
+.panel button:hover { background: #ffffff22; }
+.panel button.an { background: var(--accent); color: #2a1700; border-color: var(--accent); font-weight: 600; }
+
+#palette .gruppe { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; }
+#palette button { text-align: left; line-height: 1.2; }
+
+.zeile { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 8px; }
+.zeile button { flex: 1 1 auto; }
+
+#farben button {
+  flex: 0 0 auto;
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  border-radius: 50%;
+  border: 2px solid #0006;
+}
+#farben button.an { outline: 2px solid #fff; outline-offset: 1px; }
+#farben input[type="color"] { width: 26px; height: 24px; padding: 0; border: 0; background: none; }
+
+/* einstellungen */
+.feld { display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 6px; margin: 7px 0; }
+.feld input[type="range"] { grid-column: 1 / -1; width: 100%; }
+.feld select { background: #0c1522; color: var(--text); border: 1px solid var(--line); border-radius: 8px; padding: 3px 6px; }
+.feld .wert { color: var(--accent); font-variant-numeric: tabular-nums; }
+button.taste.warte { background: #ffd43b; color: #000; }
+
+#tastenListe div { display: flex; justify-content: space-between; gap: 10px; padding: 3px 0; border-bottom: 1px solid #ffffff10; }
+#tastenListe kbd {
+  padding: 1px 7px;
+  border-radius: 6px;
+  background: #ffffff1a;
+  border: 1px solid #ffffff30;
+  font: 600 12px system-ui, sans-serif;
+  white-space: nowrap;
+}
+.treibstoff { display: block; height: 5px; border-radius: 2px; background: #ffffff20; overflow: hidden; margin-top: 2px; }
+.treibstoff i { display: block; height: 100%; background: #ff7a1a; }
+
+/* blick durch eine kamera */
+#camOverlay {
+  position: absolute;
+  z-index: 2;
+  inset: 0;
+  pointer-events: none;
+  box-shadow: inset 0 0 0 6px #0009, inset 0 0 120px #0008;
+}
+#camOverlay[hidden] { display: none; }
+#camText {
+  position: absolute;
+  left: 22px;
+  top: 74px;
+  padding: 5px 12px;
+  border-radius: 6px;
+  background: #000a;
+  color: #fff;
+  font: 700 14px ui-monospace, Consolas, monospace;
+}
+#camText::before { content: "●"; color: #ff2a2a; margin-right: 8px; animation: rec 1s steps(2) infinite; }
+@keyframes rec { 50% { opacity: 0.15; } }
+
+/* modus-knopf */
+#btnModus, #btnNeu, #btnAus {
+  position: absolute;
+  z-index: 3;
+  right: 16px;
+  bottom: 20px;
+  padding: 12px 22px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--accent);
+  color: #2a1700;
+  font-weight: 800;
+  font-size: 16px;
+  box-shadow: 0 8px 24px #0006;
+}
+/* modus-feld (nur pc): "spielen" oben mit gewähltem modus darunter, im bau-modus statt des play-knopfs unten rechts */
+#modusFeld {
+  position: absolute;
+  z-index: 3;
+  /* unter der leiste oben (sie endet bei ca. 74 px), gleiche breite und rand wie die rechten panels */
+  top: 82px;
+  right: 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 6px;
+  width: 268px;
+}
+/* das inspector-panel rückt am pc unter das modus-feld */
+body:not(.touch).bau #inspector { top: 186px; max-height: calc(100% - 270px); }
+#modusFeld button { border: 0; font-weight: 800; box-shadow: 0 8px 24px #0006; cursor: pointer; }
+#btnSpielen { padding: 12px 22px; border-radius: 14px; background: var(--accent); color: #2a1700; font-size: 18px; letter-spacing: 1px; }
+#modusZeile { padding: 7px 12px; border-radius: 10px; background: #ffffffdd; color: #1a1a1a; font-size: 13px; }
+body.touch #modusFeld, body.fahr #modusFeld { display: none; }
+body.touch:not(.fightTouch) .nurFight { display: none; }
+body:not(.touch).bau #btnModus { display: none; }
+#modusSeite {
+  position: absolute;
+  inset: 0;
+  z-index: 9;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #000a;
+}
+#modusSeite[hidden] { display: none; }
+.modusKasten { display: flex; flex-direction: column; gap: 12px; width: min(420px, 90vw); padding: 22px; border-radius: 18px; background: #1b1e24; color: #fff; }
+.modusKasten h2 { margin: 0 0 4px; font-size: 18px; }
+.modusKachel { display: flex; flex-direction: column; gap: 4px; padding: 16px 18px; border: 2px solid #ffffff22; border-radius: 14px; background: #262a32; color: #fff; text-align: left; cursor: pointer; }
+.modusKachel b { font-size: 20px; }
+.modusKachel span { font-size: 13px; opacity: 0.75; }
+.modusKachel.aktiv { border-color: var(--accent); }
+#kartenListe { display: flex; gap: 8px; flex-wrap: wrap; }
+#kartenListe button { flex: 1; padding: 10px 12px; border: 2px solid #ffffff22; border-radius: 10px; background: #262a32; color: #fff; font-weight: 700; cursor: pointer; }
+#kartenListe button.aktiv { border-color: var(--accent); }
+#kartenListe button.aktion { flex-basis: 100%; font-weight: 500; background: #1f2329; }
+/* fight-anzeige: kompakte basen-leiste a b c oben in der mitte (blau = du, rot = gegner, weiss = frei, orange = umkämpft) */
+#fightHud {
+  position: absolute;
+  z-index: 3;
+  top: 84px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 6px;
+  pointer-events: none;
+}
+#fightHud[hidden] { display: none; }
+/* leben: drei herzen, verlorene werden abgedunkelt */
+#fightHud .leben { font: 800 20px/26px system-ui, sans-serif; color: #ff4a6a; text-shadow: 0 1px 3px #000; letter-spacing: 2px; }
+#fightHud .leben s { text-decoration: none; opacity: 0.25; }
+#fightHud .basis {
+  position: relative;
+  width: 54px;
+  height: 30px;
+  border-radius: 8px;
+  overflow: hidden;
+  background: #000b;
+  border: 2px solid var(--f, #fff);
+  box-shadow: 0 4px 14px #0006;
+}
+#fightHud .basis b { position: relative; z-index: 1; display: block; text-align: center; font: 800 15px/26px system-ui, sans-serif; color: var(--f, #fff); }
+#fightHud .basis i { position: absolute; left: 0; bottom: 0; height: 4px; opacity: 0.9; }
+#btnNeu { right: auto; left: 50%; transform: translateX(-50%); background: #ffffffdd; font-size: 14px; padding: 9px 16px; }
+#btnNeu[hidden] { display: none; }
+#btnAus { right: auto; left: 50%; margin-left: 74px; transform: none; background: #ffffffdd; font-size: 14px; padding: 9px 16px; }
+#btnAus[hidden] { display: none; }
+
+/* chat */
+#chatForm {
+  position: absolute;
+  z-index: 3;
+  left: 16px;
+  bottom: 20px;
+  display: flex;
+  width: min(420px, calc(100vw - 230px));
+  gap: 8px;
+}
+body.bau #chatForm { left: 292px; width: min(380px, calc(100vw - 500px)); }
+#chatInput {
+  flex: 1;
+  min-width: 0;
+  padding: 10px 14px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  outline: none;
+  background: var(--panel-solid);
+  color: var(--text);
+}
+#chatInput:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+#chatForm button {
+  padding: 9px 16px;
+  border: 0;
+  border-radius: 999px;
+  background: #62e6b2;
+  color: #08231a;
+  font-weight: 600;
+}
+
+/* touch-steuerung */
+#joystick {
+  position: absolute;
+  z-index: 3;
+  left: 22px;
+  bottom: 84px;
+  width: 130px;
+  height: 130px;
+  border: 2px solid #ffffff55;
+  border-radius: 50%;
+  background: #0c152255;
+  touch-action: none;
+}
+#stick {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 54px;
+  height: 54px;
+  margin: -27px 0 0 -27px;
+  border-radius: 50%;
+  background: #ffffffaa;
+}
+#touchTasten {
+  position: absolute;
+  z-index: 3;
+  right: 16px;
+  bottom: 84px;
+  display: flex;
+  flex-wrap: wrap-reverse;
+  justify-content: flex-end;
+  gap: 8px;
+  max-width: 240px;
+}
+#touchTasten button {
+  min-width: 64px;
+  height: 52px;
+  padding: 0 10px;
+  border: 2px solid #ffffff55;
+  border-radius: 16px;
+  background: #0c1522aa;
+  font-size: 12px;
+  font-weight: 600;
+  touch-action: none;
+  user-select: none;
+}
+#touchTasten button.an { background: var(--accent); color: #2a1700; }
+body:not(.touch) #joystick,
+body:not(.touch) #touchTasten,
+body.bau #joystick,
+body.bau #touchTasten { display: none; }
+
+/* schmale bildschirme: baupanel unten als streifen */
+@media (max-width: 760px) {
+  #hud { gap: 8px; padding: 6px 12px; }
+  #hud a { padding: 4px 6px; font-size: 12px; }
+  #hud a:nth-of-type(3) { display: none; }
+  .panel { width: auto; left: 8px !important; right: 8px !important; }
+  #baupanel { top: auto; bottom: 74px; max-height: 38%; }
+  #inspector { top: 64px; max-height: 40%; }
+  #fahrpanel { display: none; }
+  body.bau #chatForm, #chatForm { left: 8px; width: calc(100vw - 170px); }
+  #btnModus { right: 8px; bottom: 18px; padding: 11px 16px; }
+}
+
+/* ---------------------------------------------------------------------------
+   symbole, sprachknopf, chat-knopf
+   --------------------------------------------------------------------------- */
+.ico { margin-right: 6px; }
+#palette button, .zeile button, #btnModus, #btnNeu, #btnAus { display: inline-flex; align-items: center; gap: 0; }
+#palette button { display: flex; }
+#hud #langBtn {
+  pointer-events: auto;
+  padding: 3px 10px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: none;
+  color: var(--muted);
+  font-size: 12px;
+}
+#hud #langBtn b { color: var(--accent); }
+#chatToggle { display: none; }
+
+/* ---------------------------------------------------------------------------
+   handheld-modus: minimalistisch. teile-leiste unten, nur symbole, kaum text.
+   --------------------------------------------------------------------------- */
+body.touch .txt { display: none; }
+body.touch .ico { margin: 0; }
+/* shop und hangar zeigen im handheld-modus text statt nur eines symbols */
+body.touch #baupanel .zeile.oben button .txt { display: inline; margin-left: 4px; }
+body.touch #baupanel .zeile.oben button { min-width: 0; padding: 0 10px; font-size: 13px; }
+body.touch #hud { top: 6px; left: 6px; right: 6px; min-height: 34px; padding: 3px 10px; gap: 8px; }
+body.touch #hud strong { font-size: 14px; }
+body.touch #hud .nurDesktop { display: none; }
+body.touch #status { font-size: 0; gap: 0; }
+body.touch #tacho { font-size: 13px; white-space: nowrap; min-width: 0; }
+body.touch #hud a.hilfeLink { padding: 3px 8px; font-size: 12px; }
+body.touch #hint { display: none; }
+body.touch #btnExport, body.touch #btnImport { display: none; }
+body.touch #meldung { top: 46px; font-size: 12px; padding: 6px 12px; }
+body.touch #fahrpanel { display: none; }
+
+/* leiste zum platzieren der teile */
+body.touch #baupanel {
+  top: auto; left: 0; right: 0; bottom: 0; width: auto; max-height: none; overflow: visible;
+  display: flex; flex-wrap: wrap; align-items: center; gap: 4px;
+  padding: 5px 6px calc(5px + env(safe-area-inset-bottom));
+  border-radius: 12px 12px 0 0; border-width: 1px 0 0 0;
+}
+body.touch #baupanel[hidden] { display: none; }
+body.touch #baupanel .kopf, body.touch #palette h3 { display: none; }
+body.touch #palette { flex: 0 0 100%; display: flex; gap: 4px; overflow-x: auto; scrollbar-width: none; }
+body.touch #palette::-webkit-scrollbar { display: none; }
+body.touch #palette .gruppe { display: flex; flex: 0 0 auto; gap: 4px; padding-right: 6px; border-right: 1px solid #ffffff22; }
+body.touch #palette button { min-width: 44px; height: 36px; padding: 0 9px; justify-content: center; font-size: 12px; white-space: nowrap; }
+body.touch #baupanel .zeile { display: contents; }
+body.touch #baupanel .zeile button { flex: 0 0 auto; min-width: 34px; height: 32px; padding: 0 6px; justify-content: center; font-size: 16px; }
+body.touch #farben button { width: 22px; height: 22px; min-width: 22px; padding: 0; flex: 0 0 auto; }
+body.touch #farben input[type="color"] { width: 24px; height: 24px; }
+body.touch #btnKoerper, body.touch #btnLeeren { display: none; }
+
+/* einstellungen eines teils: schmal und ohne erklärtext */
+body.touch #inspector { top: 88px; left: 6px; right: 6px; width: auto; max-height: calc(100% - 100px - var(--bar, 130px)); padding: 8px; font-size: 12px; }
+body.touch #inspector .hinweis { display: none; }
+body.touch .feld { margin: 5px 0; }
+
+/* runde knöpfe */
+body.touch #btnModus, body.touch #btnNeu, body.touch #btnAus {
+  width: 46px; height: 46px; padding: 0; border-radius: 50%; font-size: 20px; justify-content: center;
+}
+body.touch.bau #btnModus { right: 8px; bottom: calc(var(--bar, 130px) + 8px); }
+body.touch.fahr #btnModus { right: 8px; bottom: 14px; }
+body.touch #btnNeu { bottom: 14px; }
+body.touch #btnAus { bottom: 14px; margin-left: 30px; }
+body.touch #touchTasten button { min-width: 52px; height: 44px; font-size: 11px; }
+
+/* chat hinter einem knopf */
+body.touch #chatToggle {
+  display: block; position: absolute; z-index: 4; top: 46px; left: 8px;
+  width: 36px; height: 36px; padding: 0; border: 1px solid var(--line); border-radius: 50%;
+  background: var(--panel); font-size: 17px;
+}
+body.touch #chatForm { display: none; }
+body.touch.chat-offen #chatForm { display: flex; top: 46px; left: 52px; bottom: auto; width: calc(100vw - 60px); }
+
+/* hangar-knopf im bauen-panel */
+.presetBtn {
+  position: relative; flex: 1 1 auto; display: inline-flex; align-items: center; justify-content: center;
+  padding: 6px 9px; border: 1px solid var(--line); border-radius: 9px; background: #ffffff10;
+  color: var(--text); font-size: 12.5px; cursor: pointer;
+}
+.presetBtn:hover { background: #ffffff22; }
+.panel > .presetBtn { display: flex; width: 100%; margin: 0 0 6px; }
+.presetBtn select { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; font-size: 16px; }
+body.touch .presetBtn { flex: 0 0 auto; min-width: 34px; height: 32px; padding: 0 6px; font-size: 16px; order: 9; margin: 0; }
+
+/* teile-leiste im handheld-modus: kompakter, rand blendet aus = "hier geht es weiter" */
+body.touch #palette button { min-width: 0; padding: 0 8px; font-size: 11.5px; }
+body.touch #palette {
+  scroll-snap-type: x proximity;
+  padding-right: 28px;
+  -webkit-mask-image: linear-gradient(90deg, #000 calc(100% - 34px), transparent);
+  mask-image: linear-gradient(90deg, #000 calc(100% - 34px), transparent);
+}
+body.touch #palette button { scroll-snap-align: start; }
+
+/* handy: nichts markieren, kein kopieren-/übersetzen-overlay bei langem drücken */
+html, body, .panel, #hud, #touchTasten, #joystick, #meldung, #hint, #camOverlay, #game {
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+}
+button, label, .panel, #touchTasten, #joystick { -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
+input, textarea, select { -webkit-user-select: text; user-select: text; }
+
+/* konto (accounts.js) */
+#hud #kontoBtn, #hud #modelleBtn {
+  pointer-events: auto;
+  padding: 3px 10px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: none;
+  color: var(--text);
+  font-size: 13px;
+  max-width: 140px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  cursor: pointer;
+}
+#hud #kontoBtn:hover, #hud #modelleBtn:hover { background: var(--accent-soft); }
+#modelleDialog, #kartenDialog { width: 100vw; max-width: none; height: 100vh; height: 100dvh; max-height: none; margin: 0; border: 0; border-radius: 0; overflow: auto; padding: 0; background: #0c1522; color: var(--text); }
+#modelleDialog .kontoInhalt, #kartenDialog .kontoInhalt { max-width: 1100px; margin: 0 auto; padding: 28px 20px 24px; }
+#modelleDialog .kontoZu, #kartenDialog .kontoZu { position: fixed; top: 12px; right: 16px; font-size: 22px; z-index: 2; }
+#modelleDialog .modellListe, #kartenDialog .modellListe { max-height: none; overflow: visible; grid-template-columns: repeat(auto-fill, minmax(min(100%, 420px), 1fr)); }
+#kontoDialog {
+  width: min(400px, calc(100vw - 24px));
+  max-height: calc(100vh - 24px);
+  padding: 0;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: var(--panel-solid);
+  color: var(--text);
+  box-shadow: 0 20px 60px #000a;
+}
+#kontoDialog::backdrop { background: #0008; backdrop-filter: blur(3px); }
+.kontoInhalt { position: relative; padding: 22px 20px 18px; display: grid; gap: 10px; }
+.kontoInhalt h2 { margin: 0; font-size: 18px; }
+.kontoInhalt h3 { margin: 6px 0 0; font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+.kontoZu { position: absolute; top: 8px; right: 8px; border: 0; background: none; color: var(--muted); font-size: 16px; cursor: pointer; }
+.kontoInfo { margin: 0; font-size: 13px; line-height: 1.45; color: var(--muted); }
+.kontoMeldung { margin: 0; padding: 8px 10px; border-radius: 8px; font-size: 13px; }
+.kontoMeldung.fehler { background: #ff6b6b22; color: #ffb3b3; }
+.kontoMeldung.ok { background: #62e6b222; color: #b5f5dc; }
+.kontoForm, .kontoSpeichern { display: grid; gap: 8px; }
+.kontoInhalt input { padding: 9px 11px; border: 1px solid var(--line); border-radius: 8px; background: #ffffff10; color: var(--text); font-size: 14px; }
+.kontoInhalt button:not(.kontoZu) { padding: 8px 12px; border: 1px solid var(--line); border-radius: 8px; background: #ffffff14; color: var(--text); font-size: 13px; cursor: pointer; }
+.kontoInhalt button:not(.kontoZu):hover { background: #ffffff26; }
+.kontoInhalt button.primaer { background: var(--accent); border-color: var(--accent); color: #2a1700; font-weight: 600; }
+.kontoInhalt button.link { border: 0; background: none; color: var(--accent); padding: 4px 2px; }
+.kontoInhalt button:disabled { opacity: 0.6; cursor: wait; }
+.kontoLinks { display: flex; flex-wrap: wrap; gap: 8px 14px; align-items: center; justify-content: space-between; }
+.kontoCode { padding: 14px; border-radius: 10px; background: #0006; border: 1px dashed var(--accent); font: 600 15px/1.4 ui-monospace, Consolas, monospace; text-align: center; letter-spacing: 0.06em; user-select: all; word-break: break-all; }
+.kontoGarage { margin: 0; padding: 0; list-style: none; display: grid; gap: 6px; }
+.kontoGarage li { display: flex; gap: 6px; align-items: center; }
+.kontoGarage li span { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 14px; }
+.kontoGarage li.leer { color: var(--muted); font-size: 13px; }
+body.touch #hud #kontoBtn { padding: 2px 8px; max-width: 90px; }
+
+/* fahrzeug-börse (modelle.js) */
+
+.modellTabs { display: flex; gap: 6px; flex-wrap: wrap; }
+.modellTabs button.an { background: var(--accent) !important; border-color: var(--accent) !important; color: #2a1700 !important; font-weight: 600; }
+.modellListe { margin: 0; padding: 0; list-style: none; display: grid; gap: 8px; max-height: 46vh; overflow: auto; }
+.modell { display: flex; gap: 10px; align-items: center; padding: 10px; border: 1px solid var(--line); border-radius: 10px; background: #ffffff0a; }
+.modellText { flex: 1; min-width: 0; display: grid; gap: 2px; }
+.modellText b { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.modellText small { color: var(--muted); font-size: 12px; overflow-wrap: anywhere; }
+.modellKnoepfe { display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end; }
+.modellListe .leer { color: var(--muted); font-size: 13px; padding: 6px 2px; border: 0; background: none; }
+
+/* spielerzahl und namensliste */
+#hud #spielerZahl { pointer-events: auto; cursor: pointer; font-size: 13px; color: var(--text); padding: 3px 8px; border-radius: 999px; }
+#hud #spielerZahl:hover { background: var(--accent-soft); }
+#spielerListe { position: absolute; top: calc(100% + 6px); left: 16px; z-index: 5; margin: 0; padding: 8px 12px; list-style: none; display: grid; gap: 4px; min-width: 150px; max-width: 240px; max-height: 50vh; overflow: auto; border: 1px solid var(--line); border-radius: 12px; background: var(--panel-solid); box-shadow: 0 10px 34px #0006; pointer-events: auto; font-size: 13px; }
+#spielerListe[hidden] { display: none; }
+#spielerListe li { display: flex; align-items: center; gap: 6px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+#spielerListe li i { flex: none; width: 10px; height: 10px; border-radius: 50%; border: 1px solid #fff6; }
+.kontoBox { display: grid; gap: 8px; }
+.kontoCharakter { display: flex; gap: 8px; align-items: center; }
+.kontoCharakter input[type="text"] { flex: 1; min-width: 0; }
+.kontoCharakter input[type="color"] { width: 42px; height: 36px; padding: 2px; cursor: pointer; }
+
+/* sterne-bewertung, profile, spieler-popup */
+.sterne { display: inline-flex; vertical-align: middle; }
+.kontoInhalt .sterne > *, .sterne > * { padding: 0; border: 0; background: none; font-size: 15px; line-height: 1; color: #ffffff30; }
+.sterne > .an { color: #ffc83d; }
+.kontoInhalt .sterne.klickbar > button { cursor: pointer; font-size: 20px; padding: 0 1px; }
+.kontoInhalt .sterne.klickbar > button:hover { color: #ffe08a; }
+.kontoInhalt .sterne > button { border: 0 !important; background: none !important; padding: 0 1px !important; }
+.kontoInhalt .sterne > .an { color: #ffc83d; }
+.profilKopf { display: flex; gap: 12px; align-items: center; }
+.profilKopf h2 { margin: 0; }
+.profilKopf small { color: var(--muted); }
+.profilPunkt { flex: none; width: 40px; height: 40px; border-radius: 50%; border: 2px solid #fff6; }
+.profilBio { margin: 0; padding: 10px 12px; border-radius: 10px; background: #ffffff0a; line-height: 1.45; overflow-wrap: anywhere; }
+.profilZahlen { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: 13px; color: var(--muted); }
+.profilFreund { justify-content: flex-start; }
+.kontoSeite, .kontoInfo a, .modellText a, .kontoGarage a { color: var(--accent); }
+.kontoSeite { font-size: 13px; text-decoration: none; }
+.kontoInhalt h4 { margin: 4px 0 0; font-size: 12px; color: var(--muted); }
+.kontoInhalt textarea { padding: 9px 11px; border: 1px solid var(--line); border-radius: 8px; background: #ffffff10; color: var(--text); font: 14px/1.4 system-ui, sans-serif; resize: vertical; }
+.kontoGarage small { color: var(--muted); font-size: 12px; white-space: nowrap; }
+.seitenFuss { text-align: center; font-size: 12px; color: var(--muted); margin: 0; }
+.seitenFuss a { color: var(--muted); }
+/* spieler-popup im spiel */
+#spielerDialog { width: min(440px, calc(100vw - 24px)); max-height: calc(100vh - 24px); padding: 0; border: 1px solid var(--line); border-radius: 16px; background: var(--panel-solid); color: var(--text); box-shadow: 0 20px 60px #000a; }
+#spielerDialog::backdrop { background: #0008; backdrop-filter: blur(3px); }
+#spielerListe li.klick { cursor: pointer; border-radius: 6px; padding: 2px 4px; margin: 0 -4px; }
+#spielerListe li.klick:hover { background: var(--accent-soft); }
+#spielerListe li.freund::after { content: "★"; color: #ffc83d; margin-left: auto; }
+#spielerListe li.konto b { color: var(--accent); font-weight: 600; }
+
+/* charakter-editor */
+.kontoInhalt .feld { display: grid; gap: 5px; font-size: 13px; color: var(--muted); }
+.kontoInhalt select { padding: 8px 10px; border: 1px solid var(--line); border-radius: 8px; background: #ffffff10; color: var(--text); font-size: 14px; }
+.kontoInhalt select option { background: #0c1522; color: var(--text); }
+.farbReihe { display: flex; flex-wrap: wrap; gap: 8px; }
+.kontoInhalt .farbKnopf { width: 30px; height: 30px; padding: 0 !important; border-radius: 50% !important; border: 2px solid #ffffff44 !important; cursor: pointer; }
+.kontoInhalt .farbKnopf.an { border-color: var(--accent) !important; box-shadow: 0 0 0 2px var(--accent-soft); }
+
+/* vorschaubilder in der börse, melden */
+.modellBild { flex: none; width: 128px; height: 80px; object-fit: cover; border-radius: 8px; background: #1b2536; }
+.modellBild.leer { display: grid; place-items: center; font-size: 24px; opacity: 0.5; }
+.meldeDialog { width: min(420px, calc(100vw - 24px)); padding: 0; border: 1px solid var(--line); border-radius: 16px; background: var(--panel-solid); color: var(--text); box-shadow: 0 20px 60px #000a; }
+.meldeDialog::backdrop { background: #0008; backdrop-filter: blur(3px); }
+.meldeKontext { margin: 0; padding: 8px 10px; border-radius: 8px; background: #ffffff0a; font-size: 13px; font-style: italic; overflow-wrap: anywhere; }
+.meldeKontext { margin: 0; padding: 8px 10px; border-radius: 8px; background: #ffffff0a; font-size: 13px; overflow-wrap: anywhere; }
+
+/* raumwahl */
+#hud #raumBtn { pointer-events: auto; padding: 3px 10px; border: 1px solid var(--line); border-radius: 999px; background: none; color: var(--text); font-size: 13px; cursor: pointer; white-space: nowrap; }
+#hud #raumBtn:hover { background: var(--accent-soft); }
+#raumDialog { width: min(400px, calc(100vw - 24px)); max-height: calc(100vh - 24px); padding: 0; border: 1px solid var(--line); border-radius: 16px; background: var(--panel-solid); color: var(--text); box-shadow: 0 20px 60px #000a; }
+#raumDialog::backdrop { background: #0008; backdrop-filter: blur(3px); }
+.raumListe { margin: 0; padding: 0; list-style: none; display: grid; gap: 6px; }
+.raumListe li { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border: 1px solid var(--line); border-radius: 10px; background: #ffffff08; }
+.raumListe li.hier { border-color: var(--accent); }
+.raumName { flex: 1; font-size: 14px; }
+.raumZahl { font-size: 13px; color: var(--muted); min-width: 64px; text-align: right; }
+.raumZahl.voll { color: #ff9b9b; }
+body.touch #hud #raumBtn { padding: 2px 8px; }
+
+
+/* zahlenfeld neben dem regler im inspektor */
+.feld input.wertFeld { width: 92px; padding: 2px 6px; border: 1px solid var(--line); border-radius: 6px; background: #ffffff10; color: var(--accent); font: inherit; font-variant-numeric: tabular-nums; text-align: right; justify-self: end; }
+
+/* rote warnung über fehlversuche */
+.kontoWarnung { display: grid; gap: 6px; border: 1px solid #ff6b6b88; background: #ff6b6b26 !important; color: #ffd0d0 !important; }
+.kontoWarnung b { color: #ff8f8f; }
+.kontoWarnung button { justify-self: start; }
+
+/* chat-protokoll oben links (immer sichtbar, unabhängig vom sprecher) */
+#chatProtokoll { position: absolute; z-index: 3; top: 70px; left: 14px; margin: 0; padding: 0; list-style: none; display: grid; gap: 4px; max-width: min(380px, calc(100vw - 28px)); pointer-events: none; }
+#chatProtokoll:empty { display: none; }
+#chatProtokoll li { display: block; padding: 4px 10px; border-radius: 10px; background: #0c1522bb; color: var(--text); font-size: 13px; line-height: 1.35; overflow-wrap: anywhere; transition: opacity 1.8s; backdrop-filter: blur(6px); }
+#chatProtokoll li.verblasst { opacity: 0; }
+#chatProtokoll li i { display: inline-block; width: 9px; height: 9px; margin-right: 6px; border-radius: 50%; border: 1px solid #fff6; vertical-align: middle; }
+#chatProtokoll li b { color: var(--accent); font-weight: 600; white-space: nowrap; }
+body.bau #chatProtokoll { left: 292px; }
+body.touch #chatProtokoll { top: 90px; left: 8px; }
+#chatInput.gesperrt { cursor: pointer; }
+#chatInput.gesperrt::placeholder { color: var(--accent); opacity: 1; }
+#chatForm button:disabled { opacity: 0.45; cursor: not-allowed; }
+
+/* ansicht umschalten (c): kleines symbol in der oberen leiste, nur beim fahren */
+#hud #btnAnsicht { pointer-events: auto; width: 30px; height: 26px; padding: 0; border: 1px solid var(--line); border-radius: 999px; background: none; color: var(--text); font-size: 14px; line-height: 1; cursor: pointer; }
+#hud #btnAnsicht:hover { background: var(--accent-soft); }
+#hud #btnTon { pointer-events: auto; width: 30px; height: 26px; padding: 0; border: 1px solid var(--line); border-radius: 999px; background: none; color: var(--text); font-size: 14px; line-height: 1; cursor: pointer; }
+#hud #btnTon:hover { background: var(--accent-soft); }
+/* zielpunkt: wohin das rohr gerade zeigt, rot solange nachgeladen wird */
+#ziel { position: absolute; z-index: 3; width: 0; height: 0; pointer-events: none; }
+#ziel[hidden] { display: none; }
+#ziel i { position: absolute; left: -11px; top: -11px; width: 22px; height: 22px; border: 2px solid #fff; border-radius: 50%; box-shadow: 0 0 6px #000a; }
+#ziel i::before, #ziel i::after { content: ""; position: absolute; background: #fff; box-shadow: 0 0 4px #000a; }
+#ziel i::before { left: 9px; top: -7px; width: 2px; height: 34px; opacity: 0.55; }
+#ziel i::after { top: 9px; left: -7px; height: 2px; width: 34px; opacity: 0.55; }
+#ziel span { position: absolute; left: 16px; top: -8px; font: 700 12px/1 system-ui, sans-serif; color: #fff; text-shadow: 0 0 4px #000, 0 0 2px #000; white-space: nowrap; }
+#ziel.lade i { border-color: #ff5a4a; }
+#ziel.lade i::before, #ziel.lade i::after { background: #ff5a4a; }
+#hud #btnAnsicht[hidden] { display: none; }
+body.touch #hud #btnAnsicht { width: 26px; height: 24px; font-size: 13px; }
+
+/* warteschlange für fight-matches */
+#wartePanel {
+  position: fixed; left: 50%; top: 84px; transform: translateX(-50%); z-index: 40;
+  display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 14px 20px; min-width: 260px;
+  background: rgba(20, 24, 32, 0.92); color: #fff; border: 1px solid rgba(255, 255, 255, 0.18); border-radius: 12px;
+  font: 600 14px/1.3 system-ui, sans-serif; text-align: center;
+}
+#wartePanel[hidden] { display: none; }
+#wartePanel b { font-size: 18px; }
+#wartePanel div { display: flex; gap: 8px; margin-top: 6px; flex-wrap: wrap; justify-content: center; }
+#wartePanel button { padding: 7px 12px; border-radius: 8px; border: 1px solid rgba(255, 255, 255, 0.25); background: rgba(255, 255, 255, 0.08); color: #fff; font: inherit; cursor: pointer; }
+#wartePanel button:hover { background: rgba(255, 255, 255, 0.18); }
+
+/* ---------------------------------------------------------------------------
+   minimalistisches layout: flach, ruhig, weniger deko
+   --------------------------------------------------------------------------- */
+:root { --panel: #10151cdd; --panel-solid: #10151cf2; --line: #ffffff17; --r: 10px; }
+
+/* kopfzeile: schmal, flach, rechts gruppiert */
+#hud { top: 10px; left: 10px; right: 10px; min-height: 40px; padding: 4px 12px; gap: 6px; border-radius: var(--r); box-shadow: none; backdrop-filter: blur(10px); }
+#hud strong { font-size: 15px; font-weight: 600; letter-spacing: 0.02em; margin-right: 6px; }
+#status { font-size: 12px; margin-right: auto; }
+#status::before { width: 7px; height: 7px; box-shadow: none; }
+#hud a:first-of-type { margin-left: 0; }
+#hud a, #hud #langBtn, #hud #kontoBtn, #hud #modelleBtn, #hud #raumBtn, #hud #btnAnsicht, #hud #btnTon, #hud #spielerZahl {
+  height: 28px; width: auto; display: inline-flex; align-items: center; padding: 0 10px;
+  border: 0; border-radius: 7px; background: none; color: var(--muted); font-size: 13px; line-height: 1;
+}
+#hud a:hover, #hud #langBtn:hover, #hud #kontoBtn:hover, #hud #modelleBtn:hover, #hud #raumBtn:hover,
+#hud #btnAnsicht:hover, #hud #btnTon:hover, #hud #spielerZahl:hover { background: #ffffff12; color: var(--text); }
+#hud #kontoBtn { color: var(--text); }
+#hud #spielerZahl::before { content: ""; width: 6px; height: 6px; margin-right: 6px; border-radius: 50%; background: #62e6b2; }
+#hud #btnAnsicht[hidden] { display: none; }
+#tacho { font-size: 14px; font-weight: 600; min-width: 64px; text-align: right; }
+
+/* panels: flach, kleinere radien, gleicher abstand */
+.panel { top: 60px; width: 252px; padding: 10px; border-radius: var(--r); box-shadow: none; backdrop-filter: blur(10px); }
+.panel button, .presetBtn { padding: 6px 8px; border-radius: 7px; background: #ffffff0c; }
+.panel button:hover, .presetBtn:hover { background: #ffffff1c; }
+.panel button.an { background: var(--accent); }
+.panel .kopf { margin-bottom: 6px; font-size: 12px; }
+.panel h3 { margin: 12px 0 5px; font-size: 10.5px; letter-spacing: 0.1em; }
+#baupanel { left: 10px; }
+#inspector, #fahrpanel { right: 10px; }
+.ico { margin-right: 5px; opacity: 0.6; font-size: 12px; }
+.zeile { gap: 4px; margin-top: 6px; }
+#hint { top: 58px; }
+#meldung { top: 96px; }
+
+/* spielen-knopf und modus */
+#modusFeld { top: 60px; right: 10px; width: 252px; gap: 4px; }
+body:not(.touch).bau #inspector { top: 160px; max-height: calc(100% - 240px); }
+#modusFeld button { box-shadow: none; }
+#btnSpielen { padding: 11px 16px; border-radius: var(--r); font-size: 15px; font-weight: 700; letter-spacing: 0.08em; }
+#modusZeile { padding: 7px 10px; border-radius: 7px; background: #ffffff14; color: var(--muted); font-weight: 500; font-size: 12.5px; text-align: left; }
+#modusZeile b { color: var(--text); }
+#btnModus, #btnNeu, #btnAus { box-shadow: none; border-radius: var(--r); padding: 10px 18px; font-size: 14px; font-weight: 700; }
+#btnNeu, #btnAus { background: #10151ce6; color: var(--text); border: 1px solid var(--line); font-weight: 500; }
+
+/* chat: unten links, daneben nichts mehr verdecken */
+#chatForm { left: 10px; bottom: 14px; gap: 6px; }
+body.bau #chatForm, body.bau #chatProtokoll { left: 274px; }
+#chatInput { padding: 8px 12px; border-radius: 8px; background: var(--panel-solid); font-size: 13px; }
+#chatForm button { padding: 8px 14px; border-radius: 8px; background: #ffffff14; color: var(--text); font-weight: 500; }
+#chatForm button:hover { background: #ffffff24; }
+#chatProtokoll { top: 60px; left: 12px; }
+#chatProtokoll li { border-radius: 7px; background: #10151c99; backdrop-filter: none; }
+
+/* dialoge und modus-auswahl */
+#kontoDialog, #raumDialog, #spielerDialog, .meldeDialog { border-radius: 12px; box-shadow: 0 12px 40px #0008; }
+.modusKasten { border-radius: 12px; background: #151a22; }
+.modusKachel, #kartenListe button { border-width: 1px; border-radius: 8px; background: #1c222b; }
+.modellBild.leer { font-size: 18px; }
+.modell { border-radius: 8px; }
+.raumListe li { border-radius: 8px; }
+#wartePanel { border-radius: 10px; }
+#fightHud .basis { border-radius: 6px; border-width: 1px; box-shadow: none; }
+
+@media (max-width: 760px) {
+  #hud { gap: 2px; padding: 3px 6px; }
+  #hud a, #hud #langBtn, #hud #kontoBtn, #hud #modelleBtn, #hud #raumBtn, #hud #btnAnsicht, #hud #btnTon { padding: 0 7px; font-size: 12px; }
+  #baupanel { bottom: 66px; }
+}
+body.touch #hud { top: 6px; left: 6px; right: 6px; min-height: 34px; }
+body.touch #chatToggle { border-radius: 8px; width: auto; padding: 0 10px; font-size: 12px; background: var(--panel); color: var(--text); }
+body.touch #chatForm { left: 6px; }
+body.touch #baupanel .zeile button { font-size: 14px; }
+
+/* steuerungs-panel einklappbar */
+#fahrpanel .kopf { cursor: pointer; user-select: none; }
+#fahrpanel .kopf::after { content: "–"; opacity: 0.6; margin-left: 10px; }
+#fahrpanel.zu .kopf::after { content: "+"; }
+#fahrpanel.zu #tastenListe { display: none; }
+
+/* ---------------------------------------------------------------------------
+   menü statt kopfzeile: nur ein burger-knopf oben rechts, spielerzahl und tacho oben links
+   --------------------------------------------------------------------------- */
+:root { --gold: #ffc933; --gold-soft: #ffc93333; --gold-dunkel: #3a2a00; }
+
+#hudLinks { position: absolute; z-index: 4; top: 10px; left: 10px; display: flex; align-items: center; gap: 8px; pointer-events: none; }
+#hudLinks > * { pointer-events: auto; }
+#hudLinks #spielerZahl, #hudLinks #tacho {
+  display: inline-flex; align-items: center; height: 34px; padding: 0 12px; border: 1px solid var(--line);
+  border-radius: var(--r); background: var(--panel); backdrop-filter: blur(10px); font-size: 13px; color: var(--text); white-space: nowrap;
+}
+#hudLinks #spielerZahl { cursor: pointer; }
+#hudLinks #spielerZahl:hover { background: var(--panel-solid); }
+#hudLinks #spielerZahl::before { content: ""; width: 6px; height: 6px; margin-right: 7px; border-radius: 50%; background: #62e6b2; }
+#hudLinks #spielerZahl[hidden], #hudLinks #tacho[hidden] { display: none; }
+#hudLinks #tacho { min-width: 0; font-weight: 600; font-variant-numeric: tabular-nums; pointer-events: none; }
+#hudLinks #spielerListe { top: calc(100% + 6px); left: 0; }
+
+#menuBtn {
+  position: absolute; z-index: 6; top: 10px; right: 10px; width: 40px; height: 40px; padding: 0;
+  display: grid; place-content: center; gap: 4px; border: 1px solid var(--line); border-radius: var(--r);
+  background: var(--panel); backdrop-filter: blur(10px);
+}
+#menuBtn i { display: block; width: 18px; height: 2px; border-radius: 2px; background: var(--text); transition: transform 0.18s, opacity 0.18s; }
+#menuBtn[aria-expanded="true"] i:nth-child(1) { transform: translateY(6px) rotate(45deg); }
+#menuBtn[aria-expanded="true"] i:nth-child(2) { opacity: 0; }
+#menuBtn[aria-expanded="true"] i:nth-child(3) { transform: translateY(-6px) rotate(-45deg); }
+#menuBtn:hover { background: var(--panel-solid); }
+
+#game #hud {
+  top: 56px; left: auto; right: 10px; width: 240px; min-height: 0; padding: 10px; gap: 4px;
+  flex-direction: column; align-items: stretch; border-radius: 12px; pointer-events: auto; z-index: 6;
+}
+#game #hud[hidden] { display: none; }
+#game #hud strong { margin: 0 0 2px; padding: 0 4px; }
+#game #hud #status { margin: 0 0 6px; padding: 0 4px; }
+#game #hud a, #game #hud button:not(#coinsBtn) {
+  width: 100%; height: 32px; justify-content: flex-start; padding: 0 10px; border: 0; border-radius: 8px;
+  display: flex; align-items: center; background: none; color: var(--text); font-size: 13px; text-align: left;
+}
+#game #hud a:hover, #game #hud button:not(#coinsBtn):hover { background: #ffffff14; }
+#game #hud #modelleBtn { display: none; }
+#game #hud #btnAnsicht[hidden] { display: none; }
+#game #hud #btnAnsicht:not([hidden])::after { content: " (C)"; color: var(--muted); white-space: pre; }
+#game #hud #btnTon::before { content: "♪ "; opacity: 0.6; white-space: pre; }
+#game #hud #langBtn { color: var(--muted); }
+body.touch #game #hud .nurDesktop { display: none; }
+#coinsBtn {
+  display: flex; align-items: center; gap: 8px; width: 100%; height: 36px; padding: 0 12px; margin-bottom: 4px;
+  border: 1px solid var(--gold); border-radius: 8px; background: var(--gold-soft); color: var(--gold); font-size: 14px; cursor: pointer;
+}
+#coinsBtn:hover { background: #ffc93355; }
+#coinsBtn .muenze { font-size: 15px; }
+#coinsBtn b { font-variant-numeric: tabular-nums; }
+body.touch #menuBtn { top: 6px; right: 6px; width: 36px; height: 36px; }
+body.touch #game #hud { top: 48px; right: 6px; }
+body.touch #hudLinks { top: 6px; left: 6px; }
+body.touch #hudLinks #spielerZahl, body.touch #hudLinks #tacho { height: 30px; padding: 0 9px; font-size: 12px; }
+
+/* kopf des baupanels: shop und hangar nebeneinander */
+#baupanel .zeile.oben { margin: 0 0 6px; }
+#baupanel .zeile.oben .presetBtn { flex: 1 1 0; width: auto; margin: 0; }
+.shopBtn { border-color: var(--gold) !important; color: var(--gold) !important; background: var(--gold-soft) !important; font-weight: 600; }
+.shopBtn:hover { background: #ffc93355 !important; }
+.shopBtn .ico { opacity: 1; }
+
+/* chat: nur ein symbol unten links, das feld erscheint bei enter oder klick */
+#chatToggle {
+  display: grid; place-content: center; position: absolute; z-index: 4; left: 10px; bottom: 14px; width: 38px; height: 38px; padding: 0;
+  border: 1px solid var(--line); border-radius: var(--r); background: var(--panel); color: var(--text); backdrop-filter: blur(10px);
+}
+#chatToggle:hover { background: var(--panel-solid); }
+body.chat-offen #chatToggle { color: var(--accent); border-color: var(--accent); }
+body.bau #chatToggle { left: 274px; }
+#chatForm, body.bau #chatForm, body.touch #chatForm { display: none; }
+body.chat-offen #chatForm, body.bau.chat-offen #chatForm, body.touch.chat-offen #chatForm {
+  display: flex; top: auto; bottom: 14px; left: 56px; width: min(420px, calc(100vw - 230px));
+}
+body.bau.chat-offen #chatForm { left: 320px; width: min(380px, calc(100vw - 560px)); }
+body.touch #chatToggle { top: auto; bottom: 14px; left: 6px; width: 38px; padding: 0; font-size: 12px; }
+body.touch.bau #chatToggle { bottom: calc(var(--bar, 130px) + 10px); }
+body.touch.chat-offen #chatForm, body.touch.bau.chat-offen #chatForm { left: 50px; bottom: 14px; width: calc(100vw - 120px); }
+body.touch.bau.chat-offen #chatForm { bottom: calc(var(--bar, 130px) + 10px); }
+@media (max-width: 760px) {
+  body.bau #chatToggle { left: 10px; bottom: 74px; }
+  body.bau.chat-offen #chatForm { left: 56px; bottom: 74px; width: calc(100vw - 170px); }
+}
+
+/* ---------------------------------------------------------------------------
+   shop: immer in gold (etwas gelber als die auswahl im baumenü)
+   --------------------------------------------------------------------------- */
+#shopDialog { width: min(760px, calc(100vw - 20px)); max-height: calc(100dvh - 20px); padding: 0; border: 1px solid var(--gold); border-radius: 14px; background: #14110a; color: var(--text); overflow: auto; box-shadow: 0 0 0 1px #ffc93322, 0 20px 60px #000a; }
+#shopDialog::backdrop { background: #000a; backdrop-filter: blur(3px); }
+#shopDialog .kontoInhalt { padding: 22px 20px 20px; gap: 14px; }
+#shopDialog h2, #shopDialog h3 { color: var(--gold); }
+#shopDialog h2 { font-size: 20px; letter-spacing: 0.04em; }
+#shopDialog h3 { margin: 6px 0 0; font-size: 12px; }
+#shopDialog .kontoZu { position: absolute; top: 12px; right: 14px; border: 0; background: none; color: var(--gold); font-size: 20px; cursor: pointer; }
+#shopDialog button:not(.kontoZu) { padding: 8px 14px; border: 1px solid var(--gold); border-radius: 8px; background: var(--gold-soft); color: var(--gold); font-weight: 600; cursor: pointer; }
+#shopDialog button:not(.kontoZu):hover:not(:disabled) { background: var(--gold); color: var(--gold-dunkel); }
+#shopDialog button:disabled { opacity: 0.45; cursor: not-allowed; }
+#shopDialog input { padding: 9px 11px; border: 1px solid #ffc93366; border-radius: 8px; background: #ffffff0d; color: var(--text); font-size: 14px; }
+#shopDialog input:focus { outline: none; border-color: var(--gold); box-shadow: 0 0 0 3px var(--gold-soft); }
+.shopKopf { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; padding-right: 30px; }
+.shopMuenzen { display: inline-flex; align-items: center; gap: 8px; padding: 6px 14px; border: 1px solid var(--gold); border-radius: 999px; background: var(--gold-soft); color: var(--gold); font-weight: 700; font-variant-numeric: tabular-nums; }
+.shopKarte { display: grid; gap: 10px; padding: 14px; border: 1px solid #ffc93344; border-radius: 10px; background: #ffc9330d; }
+.shopForm { display: flex; gap: 8px; flex-wrap: wrap; }
+.shopForm input { flex: 1 1 200px; letter-spacing: 0.08em; text-transform: uppercase; }
+.shopPakete { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 220px), 1fr)); gap: 10px; }
+.shopPaket { display: grid; align-content: space-between; gap: 8px; padding: 12px; border: 1px solid #ffc93344; border-radius: 10px; background: #ffc9330a; }
+.shopPaket b { color: var(--gold); }
+.shopPaket small, .shopKarte small, #shopDialog .muted { color: #d9c88f; line-height: 1.4; }
+.shopPaket.besitz { border-color: #62e6b2aa; background: #62e6b20f; }
+.shopPaket .preis { font-weight: 700; color: var(--gold); }
+.shopMeldung { margin: 0; padding: 8px 12px; border-radius: 8px; font-size: 13px; }
+.shopMeldung.ok { background: #62e6b222; color: #9af0cd; }
+.shopMeldung.fehler { background: #ff6b6b22; color: #ffb0b0; }
+.shopLink { display: flex; gap: 8px; }
+.shopLink input { flex: 1; min-width: 0; text-transform: none; letter-spacing: 0; font-size: 12.5px; }
+.shopCodes { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+.shopCodes td, .shopCodes th { padding: 4px 6px; border-bottom: 1px solid #ffc93322; text-align: left; }
+.shopCodes th { color: var(--gold); font-weight: 600; }
+#shopDialog textarea { padding: 9px 11px; border: 1px solid #ffc93366; border-radius: 8px; background: #ffffff0d; color: var(--text); font: 13px/1.4 ui-monospace, monospace; resize: vertical; }
+
+/* sensorik-paket: display am rechten rand, nur beim fahren mit sensor-teilen */
+#sensorHud { position: absolute; z-index: 3; right: 10px; top: 64px; display: flex; flex-direction: column; align-items: flex-end; gap: 8px; pointer-events: none; }
+#sensorHud[hidden], #sensorHud .sKachel[hidden] { display: none; }
+#sensorHud .sKachel {
+  --c: var(--basis, #2fe6ff); position: relative; min-width: 112px; padding: 6px 10px 8px; border-radius: 10px; overflow: hidden;
+  background: linear-gradient(160deg, #0b1624e6, #07101ad9); border: 1px solid color-mix(in srgb, var(--c) 45%, transparent);
+  box-shadow: 0 0 14px color-mix(in srgb, var(--c) 22%, transparent), inset 0 0 18px color-mix(in srgb, var(--c) 8%, transparent);
+  color: var(--text); font-variant-numeric: tabular-nums; text-align: center;
+}
+/* feine scanlinien über jeder kachel */
+#sensorHud .sKachel::after {
+  content: ""; position: absolute; inset: 0; pointer-events: none; opacity: 0.35;
+  background: repeating-linear-gradient(0deg, transparent 0 2px, color-mix(in srgb, var(--c) 14%, transparent) 2px 3px);
+}
+#sensorHud .sName { display: block; font-size: 10px; letter-spacing: 0.18em; font-weight: 700; color: var(--c); text-align: left; }
+#sensorHud .sWert { display: block; font-size: 20px; font-weight: 700; line-height: 1.25; text-shadow: 0 0 10px color-mix(in srgb, var(--c) 70%, transparent); }
+#sensorHud .sRund .sWert { font-size: 13px; margin-top: 2px; }
+#sensorHud canvas { display: block; width: 112px; height: 112px; margin: 4px auto 0; }
+#sensorHud .sBalken { display: block; height: 4px; margin-top: 4px; border-radius: 2px; background: #ffffff1a; overflow: hidden; }
+#sensorHud .sBalken u { display: block; height: 100%; width: 0; background: var(--c); box-shadow: 0 0 8px var(--c); transition: width 0.12s linear; }
+#sensorHud .sKachel.warn { --c: #ff5a4a !important; animation: sWarn 0.5s steps(2) infinite; }
+#sensorHud .sKachel.start { animation: sStart 0.6s cubic-bezier(.2,.9,.3,1.2); }
+@keyframes sStart {
+  0% { opacity: 0; transform: translateX(40px) scaleY(0.1); filter: brightness(3); }
+  60% { opacity: 1; transform: translateX(0) scaleY(1.05); }
+  100% { transform: none; filter: none; }
+}
+@keyframes sWarn { 50% { box-shadow: 0 0 22px #ff5a4a88, inset 0 0 18px #ff5a4a33; } }
+body.touch #sensorHud { top: 44px; right: 6px; gap: 5px; transform-origin: top right; transform: scale(0.72); }
+@media (prefers-reduced-motion: reduce) { #sensorHud .sKachel.start, #sensorHud .sKachel.warn { animation: none; } }
+
+/* teile aus einem paket, das dem spieler fehlt, erscheinen nicht in der palette */
+#palette .gesperrt { display: none !important; }
+
+/* bauteile eines pakets als chips auf der shop-karte */
+.shopTeile { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 8px; }
+.shopTeile span { font-size: 11px; padding: 2px 8px; border-radius: 999px; border: 1px solid var(--gold-soft, #ffc93333); color: var(--gold, #ffc933); background: #00000033; }
+.shopVorschau { display: block; margin-top: 8px; padding: 4px 12px; font-size: 12px; border-radius: 999px; border: 1px solid var(--gold-soft, #ffc93355); background: #ffc93314; color: var(--gold, #ffc933); cursor: pointer; }
+.shopVorschau:hover { background: #ffc93330; }
+
+/* fadenkreuz für richt-motoren: sitzt am zielpunkt auf dem bild */
+#zielKreuz { position: fixed; z-index: 4; width: 34px; height: 34px; margin: -17px 0 0 -17px; pointer-events: none; }
+#zielKreuz[hidden] { display: none; }
+#zielKreuz i { position: absolute; inset: 0; border: 2px solid #ffb547; border-radius: 50%; box-shadow: 0 0 8px #ffb54788, inset 0 0 6px #ffb54755; }
+#zielKreuz i::before, #zielKreuz i::after { content: ""; position: absolute; background: #ffb547; }
+#zielKreuz i::before { left: 50%; top: -7px; bottom: -7px; width: 2px; margin-left: -1px; clip-path: polygon(0 0, 100% 0, 100% 34%, 0 34%, 0 66%, 100% 66%, 100% 100%, 0 100%); }
+#zielKreuz i::after { top: 50%; left: -7px; right: -7px; height: 2px; margin-top: -1px; clip-path: polygon(0 0, 34% 0, 34% 100%, 0 100%, 66% 0, 100% 0, 100% 100%, 66% 100%); }
+#zielKreuz b { position: absolute; left: 50%; top: 100%; margin-top: 6px; transform: translateX(-50%); font: 600 11px system-ui, sans-serif; color: #ffd27a; text-shadow: 0 0 4px #000; white-space: nowrap; }
+#zielKreuz.treffer i { border-color: #ff5a4a; box-shadow: 0 0 8px #ff5a4a88, inset 0 0 6px #ff5a4a55; }
+
+/* kampfrunde: kopf-display, kill-feed, ergebnis, feuer-knopf, hilfe */
+#rundeHud { position: absolute; z-index: 3; top: 46px; left: 50%; transform: translateX(-50%); padding: 4px 12px; border-radius: 8px; background: #000a; color: #fff; font: 700 14px/1.35 system-ui, sans-serif; text-align: center; white-space: pre-line; pointer-events: none; text-shadow: 0 1px 2px #000; }
+#rundeHud[hidden] { display: none; }
+#rundeHud[data-zeit="knapp"] { color: #ff8a6a; }
+#killFeed { position: absolute; z-index: 3; top: 52px; right: 12px; display: flex; flex-direction: column; gap: 3px; align-items: flex-end; pointer-events: none; font: 600 13px/1.3 system-ui, sans-serif; color: #fff; }
+#killFeed[hidden] { display: none; }
+#killFeed div { padding: 2px 8px; border-radius: 6px; background: #000a; }
+#killFeed b.ich { color: #ffd24a; }
+#killFeed i { font-style: normal; color: #ff6a6a; }
+#ergebnis { position: absolute; z-index: 6; left: 50%; top: 50%; transform: translate(-50%, -50%); min-width: min(92vw, 360px); padding: 16px 20px; border-radius: 12px; background: #14181dee; color: #fff; font: 14px/1.4 system-ui, sans-serif; box-shadow: 0 8px 30px #000a; }
+#ergebnis[hidden] { display: none; }
+#ergebnis h2 { margin: 0 0 10px; font-size: 20px; text-align: center; }
+#ergebnis table { width: 100%; border-collapse: collapse; }
+#ergebnis td { padding: 4px 6px; }
+#ergebnis tr.ich { background: #3b8cff33; font-weight: 700; }
+#ergebnis .ergUnten { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-top: 12px; color: #c9d1da; }
+#ergebnis button { padding: 8px 14px; border-radius: 8px; border: 0; background: #3b8cff; color: #fff; font-weight: 700; cursor: pointer; }
+.feuerKnopf { min-width: 92px; min-height: 92px; border-radius: 50%; background: #d63b3b; color: #fff; font: 900 16px system-ui, sans-serif; border: 3px solid #ffffff88; }
+.feuerKnopf.an { background: #ff6a4a; transform: scale(0.95); }
+.schnellKachel { display: block; width: 100%; margin: 0 0 8px; padding: 12px 14px; text-align: left; border: 2px solid #ffb547; border-radius: 10px; background: #ffb54722; color: inherit; cursor: pointer; font: inherit; }
+.schnellKachel b { display: block; font-size: 16px; }
+.schnellKachel span { font-size: 13px; opacity: 0.85; }
+#hilfeKnopf { width: 30px; height: 30px; border-radius: 50%; border: 0; background: #2b2f34cc; color: #fff; font: 800 16px system-ui, sans-serif; cursor: pointer; }
+#hilfeSeite { position: fixed; inset: 0; z-index: 60; display: grid; place-items: center; background: #000a; }
+#hilfeSeite[hidden] { display: none; }
+.hilfeKasten { width: min(94vw, 560px); max-height: 88vh; overflow: auto; padding: 16px 18px; border-radius: 12px; background: #1b1f24; color: #e8edf2; font: 15px/1.5 system-ui, sans-serif; }
+.hilfeKopf { display: flex; justify-content: space-between; align-items: center; }
+.hilfeKopf h2 { margin: 0; font-size: 20px; }
+.hilfeZu { border: 0; background: none; color: inherit; font-size: 20px; cursor: pointer; }
+.hilfeReiter { display: flex; flex-wrap: wrap; gap: 6px; margin: 10px 0; }
+.hilfeReiter button { padding: 5px 9px; border-radius: 14px; border: 1px solid #ffffff33; background: none; color: inherit; font-size: 12px; cursor: pointer; }
+.hilfeReiter button.an { background: #3b8cff; border-color: #3b8cff; }
+.hilfeInhalt h3 { margin: 6px 0; }
+.hilfeInhalt p { margin: 8px 0; }
+.hilfeFuss { display: flex; justify-content: space-between; margin-top: 12px; }
+.hilfeFuss button { padding: 8px 16px; border-radius: 8px; border: 0; background: #3b8cff; color: #fff; font-weight: 700; cursor: pointer; }
+.hilfeFuss button:disabled { opacity: 0.35; cursor: default; }
+.hilfeAlle { margin-left: auto; border-style: dashed !important; opacity: 0.8; }
+
+/* tür- und klappenknopf der häuser (nur zu fuß in der nähe, vor allem für touch) */
+.hausKnopf { position: fixed; right: 16px; bottom: 150px; z-index: 30; padding: 12px 16px; border-radius: 12px; border: 1px solid #ffffff44; background: #e10600e6; color: #fff; font: 600 14px/1 system-ui, sans-serif; touch-action: manipulation; }
+.hausKnopf[hidden] { display: none; }
+
+/* hauptmenü: links, dahinter die szene mit einem verlauf, der beim start in 0,7 s verschwindet */
+#menueTint { position: fixed; inset: 0; z-index: 38; pointer-events: none; opacity: 0; transition: opacity 0.7s ease;
+  background: linear-gradient(90deg, rgba(10, 14, 20, 0.82) 0%, rgba(10, 14, 20, 0.55) 38%, rgba(10, 14, 20, 0.12) 100%); }
+#menueTint.an { opacity: 1; }
+#hauptmenue { position: fixed; left: 0; top: 0; bottom: 0; z-index: 40; width: min(340px, 88vw); box-sizing: border-box; padding: 28px 22px; display: flex; flex-direction: column; gap: 18px;
+  overflow: auto; color: #f2f4f7; font-family: system-ui, sans-serif; opacity: 0; transform: translateX(-24px); transition: opacity 0.7s ease, transform 0.7s ease; }
+#hauptmenue.an { opacity: 1; transform: none; }
+#hauptmenue h1 { margin: 0; font-size: 34px; font-weight: 900; letter-spacing: 0.06em; color: #e10600; text-shadow: 0 2px 12px #0008; }
+#hauptmenue .menueListe { display: grid; gap: 8px; }
+#hauptmenue button { font: 600 16px/1.2 system-ui, sans-serif; color: #f2f4f7; text-align: left; padding: 13px 16px; border-radius: 10px; border: 1px solid #ffffff2e; background: #ffffff14; cursor: pointer; backdrop-filter: blur(4px); touch-action: manipulation; }
+#hauptmenue button:hover, #hauptmenue button:focus-visible { background: #ffffff2e; outline: none; }
+#hauptmenue button.primaer { background: #e10600; border-color: #e10600; }
+#hauptmenue button.gross { font-size: 20px; padding: 16px 18px; }
+#hauptmenue .menueKarte { display: grid; gap: 8px; padding: 14px; border-radius: 12px; background: #0b1016cc; border: 1px solid #ffffff22; font-size: 14px; line-height: 1.4; }
+#hauptmenue .menueKarte[hidden] { display: none; }
+#hauptmenue .menueZeile { display: grid; gap: 6px; }
+/* während das menü offen ist, ruhen die bau- und modus-leisten */
+body.menue #baupanel, body.menue #modusFeld, body.menue #menuBtn, body.menue #fahrpanel { visibility: hidden; }
+body.menue #hud { z-index: 60; }
+@media (prefers-reduced-motion: reduce) { #menueTint, #hauptmenue { transition: opacity 0.2s linear; transform: none; } }
+
+/* der ort-knopf zeigt auch im handheld-modus sein ziel als text */
+body.touch #baupanel #btnStart .txt { display: inline; margin-left: 4px; }
+body.touch #baupanel #btnStart { min-width: 0; padding: 0 10px; font-size: 13px; }
+
+/* anmelde-frage: eigener dialog vor dem menü, das menü ist solange unsichtbar */
+#hauptmenue.versteckt { visibility: hidden; }
+#anmeldeFrage { position: fixed; z-index: 45; left: 50%; top: 50%; width: min(420px, 90vw); box-sizing: border-box; padding: 24px; display: grid; gap: 14px; border-radius: 16px;
+  background: #0b1016f2; border: 1px solid #ffffff33; color: #f2f4f7; font-family: system-ui, sans-serif; box-shadow: 0 20px 60px #000a;
+  opacity: 0; transform: translate(-50%, -46%); transition: opacity 0.3s ease, transform 0.3s ease; }
+#anmeldeFrage.an { opacity: 1; transform: translate(-50%, -50%); }
+#anmeldeFrage h2 { margin: 0; font-size: 22px; }
+#anmeldeFrage p { margin: 0; line-height: 1.45; font-size: 14px; opacity: 0.9; }
+#anmeldeFrage .menueZeile { display: grid; gap: 8px; }
+#anmeldeFrage button { font: 600 16px/1.2 system-ui, sans-serif; color: #f2f4f7; text-align: left; padding: 13px 16px; border-radius: 10px; border: 1px solid #ffffff2e; background: #ffffff14; cursor: pointer; touch-action: manipulation; }
+#anmeldeFrage button:hover, #anmeldeFrage button:focus-visible { background: #ffffff2e; outline: none; }
+#anmeldeFrage button.primaer { background: #e10600; border-color: #e10600; }
+
+/* inventar: rundes glasmenü (taste i); standardmäßig ist nichts davon sichtbar */
+#invRad { position: fixed; inset: 0; z-index: 45; display: grid; place-items: center; color: #f4f7fb; font-family: system-ui, sans-serif; opacity: 0; transition: opacity 0.18s ease; }
+#invRad[hidden] { display: none; }
+#invRad.an { opacity: 1; }
+body.menue #invRad, body.karteneditor #invRad { display: none; }
+#invRad .radHinten { position: absolute; inset: 0; background: radial-gradient(circle at 50% 50%, rgba(8, 12, 20, 0.12), rgba(8, 12, 20, 0.5)); backdrop-filter: blur(3px); }
+#invRad .radBuehne { position: relative; display: grid; gap: 16px; justify-items: center; max-height: 100vh; overflow: auto; padding: 12px; }
+#invRad .radFelder { display: flex; gap: clamp(8px, 3vw, 36px); align-items: center; justify-content: center; flex-wrap: wrap; }
+#invRad .rad { --d: min(380px, 78vmin, 44vw); position: relative; width: var(--d); height: var(--d); border-radius: 50%;
+  background: radial-gradient(circle at 30% 22%, rgba(255, 255, 255, 0.30), rgba(255, 255, 255, 0.07) 52%, rgba(255, 255, 255, 0.13) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.38); backdrop-filter: blur(22px) saturate(1.5); -webkit-backdrop-filter: blur(22px) saturate(1.5);
+  box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.55), inset 0 -14px 30px rgba(255, 255, 255, 0.05), 0 24px 70px rgba(0, 0, 0, 0.38);
+  transform: scale(0.86); transition: transform 0.26s cubic-bezier(0.2, 0.9, 0.3, 1.2); }
+#invRad.an .rad { transform: none; }
+#invRad .rad.kiste { background: radial-gradient(circle at 30% 22%, rgba(255, 214, 120, 0.34), rgba(255, 190, 90, 0.08) 52%, rgba(255, 200, 120, 0.14) 100%); border-color: rgba(255, 220, 150, 0.45); }
+@media (max-width: 760px) { #invRad .rad { --d: min(330px, 78vmin); } }
+#invRad .radMitte { position: absolute; left: 50%; top: 50%; width: calc(var(--d) * 0.36); height: calc(var(--d) * 0.36); transform: translate(-50%, -50%); display: grid; place-items: center; text-align: center; padding: 6px; box-sizing: border-box;
+  border-radius: 50%; font-weight: 600; font-size: clamp(12px, calc(var(--d) * 0.045), 17px); line-height: 1.2; color: #fff; background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255, 255, 255, 0.22); text-shadow: 0 1px 6px rgba(0, 0, 0, 0.45); }
+#invRad .radSlot { position: absolute; left: 50%; top: 50%; --s: calc(var(--d) * 0.19); width: var(--s); height: var(--s); margin: calc(var(--s) / -2); padding: 0; border-radius: 50%; display: grid; place-content: center; justify-items: center; gap: 1px;
+  transform: rotate(var(--w)) translateY(calc(var(--d) * -0.37)) rotate(calc(var(--w) * -1));
+  color: #fff; font: 600 clamp(9px, calc(var(--d) * 0.028), 11px)/1.05 system-ui, sans-serif; cursor: pointer; touch-action: manipulation;
+  background: radial-gradient(circle at 32% 25%, rgba(255, 255, 255, 0.34), rgba(255, 255, 255, 0.08) 70%); border: 1px solid rgba(255, 255, 255, 0.34);
+  box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.5), 0 6px 16px rgba(0, 0, 0, 0.25); transition: box-shadow 0.15s ease, border-color 0.15s ease, filter 0.15s ease; }
+#invRad .radSlot:hover, #invRad .radSlot:focus-visible { outline: none; border-color: rgba(255, 255, 255, 0.8); filter: brightness(1.18); }
+#invRad .radSlot.belegt { box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.5), 0 0 18px color-mix(in srgb, var(--f) 55%, transparent), 0 6px 16px rgba(0, 0, 0, 0.25); }
+#invRad .radSlot.an { border-color: #ffd24a; box-shadow: 0 0 0 2px #ffd24a99, 0 0 26px #ffd24a88; }
+#invRad .radSlot i { display: block; width: 36%; aspect-ratio: 1; border-radius: 50%; background: radial-gradient(circle at 35% 30%, #fff9, var(--f, transparent) 60%); opacity: 0; }
+#invRad .radSlot.belegt i { opacity: 1; box-shadow: 0 0 12px var(--f); }
+#invRad .radSlot b { font-weight: 600; text-align: center; max-width: 92%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-shadow: 0 1px 4px rgba(0, 0, 0, 0.5); }
+#invRad .radSlot span { position: absolute; right: 2%; bottom: 6%; min-width: 1.5em; padding: 1px 4px; border-radius: 999px; background: rgba(0, 0, 0, 0.45); color: #ffd24a; font-weight: 700; text-align: center; }
+#invRad .radSlot u { position: absolute; left: 50%; top: 6%; transform: translateX(-50%); text-decoration: none; font-size: 9px; opacity: 0.55; }
+#invRad .radUnten { display: grid; gap: 8px; justify-items: center; max-width: min(440px, 92vw); }
+#invRad .radHilfe { margin: 0; text-align: center; font-size: 12px; line-height: 1.4; opacity: 0.85; text-shadow: 0 1px 6px rgba(0, 0, 0, 0.5); }
+#invRad .radKnopf { font: 600 13px/1 system-ui, sans-serif; color: #fff; padding: 10px 16px; border-radius: 999px; cursor: pointer; background: rgba(255, 255, 255, 0.16); border: 1px solid rgba(255, 255, 255, 0.4); backdrop-filter: blur(10px); }
+@media (prefers-reduced-motion: reduce) { #invRad, #invRad .rad, #invRad .radSlot { transition: none; } }
+
+/* hausauswahl: glasdialog mit einer karte je variante */
+#hausWahl { position: fixed; inset: 0; z-index: 47; display: grid; place-items: center; font-family: system-ui, sans-serif; color: #f4f7fb; opacity: 0; transition: opacity 0.2s ease; }
+#hausWahl[hidden] { display: none; }
+#hausWahl.an { opacity: 1; }
+#hausWahl .hwHinten { position: absolute; inset: 0; background: rgba(8, 12, 20, 0.55); backdrop-filter: blur(4px); }
+#hausWahl .hwKasten { position: relative; width: min(760px, 94vw); max-height: 90vh; overflow: auto; box-sizing: border-box; padding: 22px; border-radius: 22px; display: grid; gap: 14px;
+  background: linear-gradient(160deg, rgba(255, 255, 255, 0.22), rgba(255, 255, 255, 0.07)); border: 1px solid rgba(255, 255, 255, 0.35); backdrop-filter: blur(22px) saturate(1.4); -webkit-backdrop-filter: blur(22px) saturate(1.4);
+  box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.5), 0 24px 70px rgba(0, 0, 0, 0.45); }
+#hausWahl h2 { margin: 0; font-size: 22px; }
+#hausWahl p { margin: 0; font-size: 13px; opacity: 0.85; line-height: 1.4; }
+#hausWahl .hwGrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 10px; }
+#hausWahl .hwKarte { display: grid; justify-items: center; gap: 4px; padding: 10px; border-radius: 16px; cursor: pointer; color: #fff; text-align: center; font: 12px/1.3 system-ui, sans-serif;
+  background: rgba(255, 255, 255, 0.1); border: 1px solid rgba(255, 255, 255, 0.3); touch-action: manipulation; transition: background 0.15s ease, border-color 0.15s ease, transform 0.15s ease; }
+#hausWahl .hwKarte:hover, #hausWahl .hwKarte:focus-visible { background: rgba(255, 255, 255, 0.2); outline: none; transform: translateY(-2px); }
+#hausWahl .hwKarte.an { border-color: #ffd24a; box-shadow: 0 0 0 2px #ffd24a66, 0 0 22px #ffd24a44; }
+#hausWahl .hwKarte canvas { width: 156px; height: 120px; max-width: 100%; border-radius: 10px; background: rgba(8, 12, 20, 0.35); }
+#hausWahl .hwKarte b { font-size: 15px; }
+#hausWahl .hwKarte span { opacity: 0.8; }
+#hausWahl .hwZu { justify-self: end; font: 600 13px/1 system-ui, sans-serif; color: #fff; padding: 10px 18px; border-radius: 999px; cursor: pointer; background: rgba(255, 255, 255, 0.16); border: 1px solid rgba(255, 255, 255, 0.4); }
+@media (prefers-reduced-motion: reduce) { #hausWahl, #hausWahl .hwKarte { transition: none; } }
+
+/* der haus-editor liegt über dem spiel: menü, inventar und knöpfe der szene ruhen */
+body.hauseditor #hauptmenue, body.hauseditor #menueTint, body.hauseditor #invRad, body.hauseditor .hausKnopf, body.hauseditor #hausWahl, body.hauseditor #anmeldeFrage { display: none !important; }
+#hausWahl .hwFuss { display: flex; gap: 8px; justify-content: flex-end; flex-wrap: wrap; }

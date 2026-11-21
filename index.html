@@ -1,0 +1,132 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+  <meta name="theme-color" content="#2b2f34">
+  <title>Junkwing</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%232b2f34'/%3E%3Crect x='6' y='12' width='20' height='9' rx='2' fill='%23ffb547'/%3E%3Ccircle cx='10' cy='23' r='3.5' fill='%23fff'/%3E%3Ccircle cx='22' cy='23' r='3.5' fill='%23fff'/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="effekte.css">
+  <script src="lang.js"></script>
+  <script type="importmap">{"imports":{"three":"./lib/three.module.js","three/addons/":"./lib/addons/"}}</script>
+  <style>
+    .splash { position: fixed; inset: 0; z-index: 100; display: grid; place-content: center; justify-items: center; gap: 22px; background: #2b2f34; pointer-events: none; animation: splash-out 0.6s ease 2.2s forwards; }
+    .splash-name { color: #e10600; font-size: clamp(32px, 9vw, 84px); font-weight: 900; letter-spacing: 0.08em; animation: splash-in 0.9s ease both; }
+    .splash-bar { width: clamp(140px, 30vw, 320px); height: 3px; background: #e1060033; overflow: hidden; }
+    .splash-bar i { display: block; width: 100%; height: 100%; background: #e10600; transform-origin: left; animation: splash-load 2s ease-in-out both; }
+    @keyframes splash-in { from { opacity: 0; letter-spacing: 0.3em; } to { opacity: 1; letter-spacing: 0.08em; } }
+    @keyframes splash-load { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+    @keyframes splash-out { to { opacity: 0; visibility: hidden; } }
+  </style>
+</head>
+<body class="bau">
+  <div class="splash" id="splash" aria-hidden="true">
+    <div class="splash-name">KroxenStudios</div>
+    <div class="splash-bar"><i></i></div>
+  </div>
+
+  <main id="game">
+    <div id="hudLinks">
+      <span id="spielerZahl" hidden title="Verbundene Spieler" data-en-title="Connected players">1</span>
+      <ul id="spielerListe" hidden aria-label="Verbundene Spieler" data-en-aria="Connected players"></ul>
+      <span id="tacho" hidden>0 km/h</span>
+    </div>
+    <button id="menuBtn" type="button" aria-label="Menü" data-en-aria="Menu" aria-expanded="false" aria-controls="hud" title="Menü" data-en-title="Menu"><i></i><i></i><i></i></button>
+    <div id="hud" hidden>
+      <strong>Junkwing</strong>
+      <span id="status">Verbinde …</span>
+      <button id="coinsBtn" type="button" title="Coins und Shop" data-en-title="Coins and shop"><span class="muenze">●</span><b id="coinsZahl">–</b></button>
+      <button id="btnTon" type="button" title="Ton an/aus" data-en-title="Sound on/off" aria-label="Ton an/aus" data-en-aria="Sound on/off">Ton</button>
+      <button id="btnAnsicht" type="button" hidden title="Ansicht umschalten (C)" aria-label="Ansicht umschalten (C)">Ansicht</button>
+      <a class="hilfeLink" href="hilfe.html" data-en-href="help.html"><span data-en="Help">Spielhilfe</span></a>
+      <a class="nurDesktop" href="konto.html" data-en="Account">Konto</a>
+      <a class="nurDesktop" href="../index.html">Waiting Games</a>
+      <button id="langBtn" type="button" aria-label="Sprache wechseln / Switch language">DE | EN</button>
+    </div>
+
+    <div id="laden" data-en="Loading physics …">Lade Physik …</div>
+    <div id="hint" aria-live="polite"></div>
+    <div id="meldung" aria-live="polite"></div>
+
+    <aside id="baupanel" class="panel">
+      <div class="kopf">
+        <span><span data-en="Parking lot">Parkplatz</span> <b id="lotNr">–</b></span>
+        <span id="teileZahl">0</span>
+      </div>
+      <div class="zeile oben">
+        <button type="button" id="btnShop" class="presetBtn shopBtn" title="Shop: Pakete und Geschenkcodes" data-en-title="Shop: packs and gift codes"><span class="ico"><svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true"><path d="M8 1l2 5 5 2-5 2-2 5-2-5-5-2 5-2z" fill="currentColor"/></svg></span><span class="txt" data-en="Shop">Shop</span></button>
+        <button type="button" id="btnHangar" class="presetBtn" title="Hangar: Fahrzeuge anderer" data-en-title="Hangar: vehicles from others"><span class="ico"><svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true"><path d="M1 7l7-5 7 5v7H1z" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M4 14V9h8v5" fill="none" stroke="currentColor" stroke-width="1.6"/></svg></span><span class="txt" data-en="Hangar">Hangar</span></button>
+      </div>
+      <button type="button" id="btnStart" class="presetBtn" hidden title="Ort wechseln: Haus oder großer Parkplatz" data-en-title="Change place: house or big parking lot"><span class="ico"><svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true"><path d="M8 1a5 5 0 0 0-5 5c0 4 5 9 5 9s5-5 5-9a5 5 0 0 0-5-5zm0 7a2 2 0 1 1 0-4 2 2 0 0 1 0 4z" fill="currentColor"/></svg></span><span class="txt" id="startTxt">→ Großer Parkplatz</span></button>
+      <div id="palette"></div>
+      <div class="zeile" id="farben"></div>
+      <div class="zeile werkzeuge">
+        <button type="button" data-tool="setzen" class="an" title="Linksklick" data-en-title="Left click"><span class="ico">✚</span><span class="txt" data-en="Place">Setzen</span></button>
+        <button type="button" data-tool="entfernen" title="Rechtsklick" data-en-title="Right click"><span class="ico">✕</span><span class="txt" data-en="Remove">Entfernen</span></button>
+        <button type="button" data-tool="einstellen" title="Mittelklick oder Alt+Klick" data-en-title="Middle click or Alt+click"><span class="ico">≡</span><span class="txt" data-en="Adjust">Einstellen</span></button>
+        <button type="button" data-tool="auswaehlen" title="Umschalt+Klick (Strg+A: alle)" data-en-title="Shift+click (Ctrl+A: all)"><span class="ico">▣</span><span class="txt" data-en="Select">Auswählen</span></button>
+        <button type="button" data-tool="duplizieren" title="Auswahl an die angeklickte Stelle kopieren" data-en-title="Copy the selection to the clicked spot"><span class="ico">⧉</span><span class="txt" data-en="Duplicate">Duplizieren</span></button>
+      </div>
+      <div class="zeile">
+        <button type="button" id="btnDrehen" title="R"><span class="ico">↻</span><span class="txt" data-en="Rotate (R)">Drehen (R)</span></button>
+        <button type="button" id="btnKippen" title="T"><span class="ico">⤵</span><span class="txt" data-en="Tilt (T)">Kippen (T)</span></button>
+        <button type="button" id="btnKoerper" title="V"><span class="ico">∞</span><span class="txt" data-en="Connections (V)">Verbindungen (V)</span></button>
+        <button type="button" id="btnUndo" title="Strg+Z" data-en-title="Ctrl+Z"><span class="ico">↶</span><span class="txt" data-en="Undo">Rückgängig</span></button>
+        <button type="button" id="btnExport" title="JSON"><span class="ico">⭳</span><span class="txt" data-en="Export">Export</span></button>
+        <button type="button" id="btnImport" title="JSON"><span class="ico">⭱</span><span class="txt" data-en="Import">Import</span></button>
+        <input type="file" id="importDatei" accept=".json,application/json" hidden>
+        <button type="button" id="btnLeeren"><span class="ico">⌫</span><span class="txt" data-en="Clear all">Alles weg</span></button>
+      </div>
+    </aside>
+
+    <aside id="inspector" class="panel" hidden>
+      <div class="kopf"><b id="inspTitel">Teil</b><button type="button" id="inspZu" aria-label="Schließen" data-en-aria="Close">✕</button></div>
+      <div id="inspInhalt"></div>
+    </aside>
+
+    <aside id="fahrpanel" class="panel" hidden>
+      <div class="kopf"><b data-en="Controls">Steuerung</b></div>
+      <div id="tastenListe"></div>
+    </aside>
+
+    <div id="modusFeld">
+      <button id="btnSpielen" type="button" data-en="PLAY">SPIELEN</button>
+      <button id="modusZeile" type="button"><span data-en="Mode">Modus</span>: <b id="modusName">Test</b></button>
+    </div>
+    <div id="modusSeite" hidden>
+      <div class="modusKasten">
+        <h2 data-en="Choose a mode">Modus wählen</h2>
+        <button type="button" id="schnellSpiel" class="schnellKachel"><b data-en="⚡ Quick game">⚡ Schnelles Spiel</b><span data-en="Random map, straight into a round. Bots fill empty slots.">Zufällige Karte, direkt in eine Runde. Bots füllen freie Plätze.</span></button>
+        <button type="button" class="modusKachel" data-modus="fight"><b>Fight</b><span data-en="Fight other players with cannons and explosives. Fuel tanks can explode.">Kämpfe gegen andere Spieler mit Geschützen und Sprengstoff. Volle Tanks können explodieren.</span></button>
+        <button type="button" class="modusKachel" data-modus="test"><b>Test</b><span data-en="Drive freely and try out your vehicle.">Frei fahren und das Fahrzeug ausprobieren.</span></button>
+        <h2 data-en="Fight map">Fight-Karte</h2>
+        <div id="kartenListe"></div>
+      </div>
+    </div>
+    <div id="fightHud" hidden></div>
+    <div id="wartePanel" hidden>
+      <b id="warteText"></b>
+      <span id="warteDetail"></span>
+      <div><button type="button" id="warteJetzt" data-en="Start now without waiting">Jetzt ohne Warteschlange starten</button><button type="button" id="warteAb" data-en="Cancel">Abbrechen</button></div>
+    </div>
+    <div id="ziel" hidden><i></i><span></span></div>
+    <button id="btnModus" type="button"><span class="ico">▶</span><span class="txt">Losfahren</span></button>
+    <button id="btnNeu" type="button" hidden title="Rücktaste" data-en-title="Backspace"><span class="ico">↻</span><span class="txt" data-en="Restart">Neu starten</span></button>
+    <button id="btnAus" type="button" hidden title="X"><span class="ico">⇄</span><span class="txt">Aussteigen (X)</span></button>
+    <button id="chatToggle" type="button" aria-label="Chat (Enter)" title="Chat (Enter)"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M4 4h16a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H9l-5 4v-4H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z" fill="currentColor"/></svg></button>
+
+    <div id="camOverlay" hidden><span id="camText"></span></div>
+
+    <form id="chatForm" autocomplete="off">
+      <input id="chatInput" type="text" maxlength="100" placeholder="Nachricht (Enter)" data-en-placeholder="Message (Enter)" aria-label="Chatnachricht" data-en-aria="Chat message">
+      <button type="submit" data-en="Send">Senden</button>
+    </form>
+
+    <div id="joystick" aria-label="Ziehen zum Fahren" data-en-aria="Drag to drive"><div id="stick"></div></div>
+    <div id="touchTasten"></div>
+  </main>
+
+  <script type="module" src="spiel.js"></script>
+</body>
+</html>

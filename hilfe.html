@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Junkwing – Spielhilfe</title>
+  <style>
+    :root { color-scheme: dark; --accent: #ffb547; }
+    body { margin: 0; background: #0c1522; color: #eef4ff; font: 15px/1.55 system-ui, sans-serif; }
+    main { max-width: 760px; margin: 0 auto; padding: 28px 18px 60px; }
+    h1 { color: var(--accent); margin: 0 0 4px; }
+    h2 { margin: 28px 0 8px; font-size: 18px; }
+    a { color: #ffd38a; }
+    table { width: 100%; border-collapse: collapse; margin: 6px 0; }
+    td { padding: 6px 8px; border-bottom: 1px solid #ffffff18; vertical-align: top; }
+    td:first-child { width: 34%; color: #f3e3c8; font-weight: 600; }
+    kbd { padding: 1px 6px; border-radius: 5px; background: #ffffff1a; border: 1px solid #ffffff30; font: 600 12.5px system-ui, sans-serif; }
+    .muted { color: #a9bad0; }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>Junkwing</h1>
+    <p class="muted">Bau dir auf deinem Parkplatz ein Fahrzeug aus Teilen und fahr mit den anderen Spielern herum. <a href="index.html">Zurück zum Spiel</a></p>
+
+    <h2>Bauen</h2>
+    <table>
+      <tr><td>Teil setzen</td><td>Teil links auswählen, dann Linksklick auf eine Fläche oder auf den Boden des Parkplatzes. Die Vorschau zeigt <b style="color:#46e07a">grün</b> = verbunden, <b style="color:#ffd43b">gelb</b> = lose, <b style="color:#ff4040">rot</b> = geht nicht.</td></tr>
+      <tr><td>Teil entfernen</td><td>Rechtsklick (oder Werkzeug „Entfernen“)</td></tr>
+      <tr><td>Teil einstellen</td><td>Mittelklick oder <kbd>Alt</kbd>+Klick (oder Werkzeug „Einstellen“): Farbe, Tasten, Lenkwinkel, Schub …</td></tr>
+      <tr><td>Drehen / Kippen</td><td><kbd>R</kbd> dreht das nächste Teil, <kbd>T</kbd> kippt Blöcke und Schrägen. Anbauteile (Räder, Auspuff, Triebwerke …) richten sich nach der Fläche, an die du sie klickst.</td></tr>
+      <tr><td>Ansicht</td><td>Ziehen dreht, Rechts-Ziehen oder <kbd>Shift</kbd>+Ziehen schiebt, Mausrad zoomt, <kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> schiebt.</td></tr>
+      <tr><td>Verbindungen prüfen</td><td><kbd>V</kbd> färbt jeden starren Körper anders ein. Alles in einer Farbe ist fest verbunden.</td></tr>
+      <tr><td>Rückgängig</td><td><kbd>Strg</kbd>+<kbd>Z</kbd></td></tr>
+      <tr><td>Hangar</td><td>Knopf „Hangar“ im Bauen-Panel (oder 📦 oben): Vollbild-Seite mit dem Reiter „Vorlagen“ (Kart, Dragster, Einkaufswagen, Geländewagen, Flugzeug, Kranwagen, Zugmaschine mit Anhänger und die größeren Projekte Reisebus mit 13 Sitzen, Raumrakete, Propellerflugzeug, Feuerwehrauto mit Leiter und Wassertank, Propeller-Buggy und Zug mit zwei abkoppelbaren Wagen). Dazu die Fahrzeuge anderer Spieler. Ein geladenes Fahrzeug ersetzt dein aktuelles, mit Rückgängig holst du es zurück.</td></tr>
+    </table>
+    <p class="muted">Teile verbinden sich, wenn sie mit verbindenden Flächen aneinanderstoßen. Nicht verbundene Teile bewegen sich nicht mit – außer eine Kraft wirkt auf sie (ein loses Triebwerk fliegt allein los). Dein Bauplan wird im Browser gespeichert.</p>
+
+    <h2>Teile</h2>
+    <table>
+      <tr><td>Sitz</td><td>Hier sitzt du. Du kannst beliebig viele Sitze einbauen. Der zuerst gebaute Sitz legt „vorne“ für Gas und Lenkung fest. Mit <kbd>X</kbd> steigst du aus und wieder ein – in jeden freien Sitz in der Nähe, auch in Fahrzeuge anderer Spieler (dann fährst du mit). Alternativ klickst du (oder tippst) direkt auf einen Sitz. Gesteuert wird nur das eigene Fahrzeug, solange du in einem seiner Sitze sitzt.</td></tr>
+      <tr><td>Block, Stufe, Schräge, Eckschräge</td><td>Verkleidung und Rahmen.</td></tr>
+      <tr><td>Lenkrad (lenkbar)</td><td>Lenkt mit <kbd>A</kbd>/<kbd>D</kbd>; maximaler Lenkwinkel einstellbar. Räder hinter dem Schwerpunkt lenken automatisch gegenläufig (einstellbar).</td></tr>
+      <tr><td>Starres Rad</td><td>Rollt nur geradeaus. Angetrieben oder frei rollend.</td></tr>
+      <tr><td>Einkaufswagenrad</td><td>Dreht sich frei um 360° in die Bewegungsrichtung, ohne Antrieb.</td></tr>
+      <tr><td>Auspuff</td><td>Abgas, solange der Motor läuft (<kbd>M</kbd>). Farbe einstellbar.</td></tr>
+      <tr><td>Nebelgenerator</td><td>Nebel auf Knopfdruck (Vorgabe <kbd>F</kbd>), auch ohne Motor. Farbe einstellbar.</td></tr>
+      <tr><td>Triebwerk</td><td>Dauerschub, solange die Taste gehalten wird (Vorgabe <kbd>Shift</kbd>).</td></tr>
+      <tr><td>Raketentriebwerk</td><td>Sehr starker Schub für wenige Sekunden (Vorgabe <kbd>R</kbd>), danach lädt es wieder auf.</td></tr>
+      <tr><td>Tragfläche</td><td>Ebene Platte, die im Luftstrom Auftrieb und Luftwiderstand erzeugt. Auftrieb entsteht erst bei Anstellwinkel (Nase leicht hoch oder Fläche schräg gekippt), ab ca. 17° reißt die Strömung ab. Wirksame Fläche einstellbar.</td></tr>
+      <tr><td>Steuerfläche</td><td>Wie die Tragfläche, aber ihre Hinterkante (gelb) lässt sich kippen. Kanal <b>Nicken</b> (Höhenruder, <kbd>↓</kbd> = Nase hoch), <b>Rollen</b> (Querruder, <kbd>←</kbd><kbd>→</kbd>, links und rechts auf „gegenläufig“ stellen) oder <b>Gieren</b> (Seitenruder, senkrecht eingebaut, <kbd>Q</kbd><kbd>E</kbd>). Ausschlag und Tasten einstellbar. Die Pfeiltasten steuern keine Räder mehr, dafür WASD.</td></tr>
+      <tr><td>Kamera</td><td>Taste (Vorgabe <kbd>V</kbd>, weitere Kameras <kbd>B</kbd>, <kbd>N</kbd> …) schaltet die Ansicht durch die Kamera um, nochmal drücken kehrt zurück. Die Kamera schaut in Richtung ihrer Linse, bewegt sich mit ihrem Teil mit und funktioniert auch, wenn du ausgestiegen bist oder die Kamera lose herumliegt. Blickfeld einstellbar.</td></tr>
+      <tr><td>Scheinwerfer</td><td>Leuchtet in Richtung der Linse, die Taste (Vorgabe <kbd>L</kbd>) schaltet ihn an und aus. Farbe einstellbar. Die nächsten vier eingeschalteten Scheinwerfer werfen einen echten Lichtkegel.</td></tr>
+      <tr><td>Leiter</td><td>Zu Fuß hochklettern: an der Leiter <kbd>W</kbd>/<kbd>S</kbd>, <kbd>Leertaste</kbd> springt ab. Mehrere übereinander ergeben eine lange Leiter; mit <kbd>R</kbd>/<kbd>T</kbd> drehst du sie.</td></tr>
+      <tr><td>Propellermotor</td><td>Schub wie ein Propeller: <kbd>G</kbd> mehr, <kbd>H</kbd> weniger Gas (die Einstellung bleibt). Der Schub sinkt mit dem Tempo (Höchsttempo einstellbar) und in dünner Luft, im Weltraum gibt es keinen. Schnell drehende Blätter verschwimmen zur Scheibe.</td></tr>
+      <tr><td>Treibstofftank</td><td>Treibstoff für Triebwerke, Propeller und den Fahrmotor (Raketen haben eigenen). Hat ein Fahrzeug Tanks, geht ohne Treibstoff nichts – jedes Teil bekommt nur Treibstoff aus Tanks, die mit ihm fest verbunden sind. Ohne Tank ist der Verbrauch aus. Mit <kbd>K</kbd> schaltest du den Verbrauch aus und an (dann ist der Treibstoff unbegrenzt). Der Füllstand steht oben neben dem Tempo.</td></tr>
+      <tr><td>Fallschirm</td><td>Taste (Vorgabe <kbd>P</kbd>) öffnet ihn, nochmal drücken packt ihn ein. Bremst durch Luftwiderstand: je schneller, desto stärker – auch beim Fallen nach Sprüngen. Größe und Farbe einstellbar.</td></tr>
+      <tr><td>Stellmotor</td><td>Was an der Drehscheibe oben hängt, dreht sich gegen den Rest (Vorgabe <kbd>Q</kbd>/<kbd>E</kbd>). Modus „Winkel halten“ mit Begrenzung oder „Dauerdrehung“.</td></tr>
+      <tr><td>Richtmotor (Zielen)</td><td>Stellmotor und Micro Drive haben die Einstellung <em>Richtmotor</em>. Dann richten sie die Waffe an ihrem Kopf (Geschütz oder Schnellfeuerkanone) automatisch auf den Punkt aus, auf den du mit der Maus zeigst oder den du mit dem Finger antippst. Das Fadenkreuz zeigt den Zielpunkt samt Entfernung; die Flugbahn wird vorgehalten. Mit zwei Motoren (Gieren und Neigen) zielst du in alle Richtungen im Bereich der Motoren. Die Ansicht drehst du dann mit der rechten Maustaste. Jeder Motor behält seine Tasten, am besten bekommt jeder eigene.</td></tr>
+      <tr><td>Maustasten belegen</td><td>Überall, wo eine Taste eingestellt wird (zum Beispiel <em>Schiessen</em>), kannst du stattdessen eine Maustaste drücken: links, Mitte, rechts, zurück oder vor. Am Handy erscheint die Belegung wie jede Taste als Knopf.</td></tr>
+      <tr><td>Sollbruchstelle</td><td>Hält beide Seiten fest zusammen, bis du ihre Taste drückst (Vorgabe <kbd>1</kbd>, <kbd>2</kbd>, …). Dann trennen sich die Teile.</td></tr>
+      <tr><td>Explosive</td><td>Zündet einmal mit ihrer Taste (Vorgabe <kbd>Z</kbd>): Ein Blitz kappt alle Verbindungen im Umkreis (<em>Reichweite</em> in Metern) und drückt die Teile mit der eingestellten <em>Kraft</em> (kN) von der Ladung weg.</td></tr>
+      <tr><td>Panzerblock</td><td>Sehr schwer und explosionssicher: Seine Verbindungen halten auch bei Sprengungen, und ein Körper mit Panzerblock wird nicht weggeschleudert.</td></tr>
+      <tr><td>Motor</td><td>Treibt die Räder an, egal wo er sitzt. Die Leistung (PS) stellst du im Inspektor ein; mehrere Motoren addieren sich, mehr Leistung verbraucht mehr Treibstoff.</td></tr>
+      <tr><td>Geschütz</td><td>Rohr mit einstellbarem Kaliber (25–155 mm), nur im Fight-Modus. Es feuert vom Verschluss weg.</td></tr>
+      <tr><td>Geschützverschluss</td><td>Schießt mit seiner Taste durch das anliegende Rohr. Dicker als das Kaliber: Das Geschoss geht im Rohr los. Dünner: langsamer und ungenauer.</td></tr>
+      <tr><td>Munitionslager</td><td>Patronen eines Kalibers; der Verschluss braucht ein Lager mit seinem Geschossdurchmesser am selben festen Fahrzeugteil. Direkt am Verschluss lädt er doppelt so schnell nach. Bei einem Treffer explodiert der Rest.</td></tr>
+      <tr><td>Geschossarten</td><td><b>HE</b> (hochexplosiv) sprengt im Umkreis. <b>AP</b> (Wuchtgeschoss) hat wenig Streuung der Wirkung, schlägt aber hart in ein einzelnes Teil und nutzt Panzerblöcke stark ab. <b>HEAT</b> (Hohlladung) durchschlägt Blöcke (Panzerblöcke kosten mehr), macht dafür weniger Schaden als AP. Jedes Munitionslager enthält eine Art; der Verschluss nimmt die eingestellte Art, <kbd>C</kbd> schaltet im Spiel durch.</td></tr>
+      <tr><td>Vorlage „Panzer“</td><td>Wanne mit sechs Rädern, Turm (<kbd>Q</kbd>/<kbd>E</kbd> dreht ihn), Kanone 90 mm (<kbd>↑</kbd>/<kbd>↓</kbd> hebt und senkt sie), Schuss <kbd>X</kbd>.</td></tr>
+    </table>
+
+    <h2>Fahren</h2>
+    <table>
+      <tr><td>Losfahren / zurück</td><td>Knopf unten rechts oder <kbd>Tab</kbd></td></tr>
+      <tr><td>Gas, Rückwärts, Lenken</td><td><kbd>W</kbd> <kbd>S</kbd> <kbd>A</kbd> <kbd>D</kbd></td></tr>
+      <tr><td>Bremse</td><td><kbd>Leertaste</kbd></td></tr>
+      <tr><td>Motor an/aus</td><td><kbd>M</kbd></td></tr>
+      <tr><td>Kamera</td><td>Ziehen dreht, Mausrad zoomt, <kbd>C</kbd> (oder der 👁-Knopf) schaltet die Ansicht um: Verfolger fern, nah, Ich-Perspektive. In der Ich-Perspektive dreht Ziehen den Kopf, zu Fuß die Laufrichtung.</td></tr>
+      <tr><td>Aussteigen / Einsteigen</td><td><kbd>X</kbd>. Zu Fuß: WASD laufen, <kbd>Leertaste</kbd> springen, <kbd>Shift</kbd> rennen. Ohne Fahrer steht das Fahrzeug mit angezogener Bremse.</td></tr>
+      <tr><td>Neu starten</td><td><kbd>Rücktaste</kbd> (Fahrzeug steht wieder heil auf dem Parkplatz)</td></tr>
+      <tr><td>Chat</td><td><kbd>Enter</kbd></td></tr>
+      <tr><td>Handy / Tablet</td><td>Joystick links zum Fahren, Knöpfe rechts für Bremse und alle Teile mit Tasten.</td></tr>
+    </table>
+
+    <h2>Die Karte</h2>
+    <p class="muted">Rund um die flache Arena mit den Parkplätzen liegt eine große Landschaft von 6,4 × 6,4 km: Hügel, Täler, Berge, Wälder, Straßen, acht Dörfer und Funktürme. Die Karte wurde einmal erzeugt und ist für alle Spieler gleich. Am Rand umgibt sie ein Gebirgsring. Die Straßen führen von der Arena zu den Dörfern; auf der Startbahn (östlich der Hindernisse) kannst du mit dem Flugzeug starten.</p>
+
+    <h2>Höhe und Weltraum</h2>
+    <p class="muted">Die Luft wird mit der Höhe dünner: Tragflächen, Ruder und Fallschirm verlieren ihre Wirkung, Raketen und Triebwerke nicht. Zwischen etwa 3000 und 7000 m verschwindet die Schwerkraft, darüber bist du schwerelos im schwarzen Weltall mit Sternen und einer kleinen Erde. Die Höhe steht oben neben dem Tempo. Wer wieder absinkt, wird ab ca. 3000 m von der Schwerkraft zurückgeholt.</p>
+
+    <h2>Fight</h2>
+    <p class="muted">Im Modusfeld über „Spielen“ wählst du Fight oder Test. Im Fight nimmst du Basen ein (30 Sekunden, mehrere Fahrer gleichzeitig verlangsamen oder pausieren es) und sammelst Punkte. Treffer und Explosionen zerstören Teile: Räder können abfallen, Panzerblöcke halten nur begrenzt lange, volle Tanks explodieren.</p>
+    <p class="muted"><b>Karten:</b> „Karten laden / teilen“ öffnet das Kartenfenster (wie der Hangar): eigene Karten verwalten, Karten anderer laden, spielen und hochladen. Im Karteneditor baust du Gelände, Gebäude, Felsen, Bäume, Basen und Startpunkte und testest die Karte direkt. Die offiziellen Karten pflegt KroxenStudios.</p>
+    <p class="muted"><b>Warteschlange und NPCs:</b> „Spielen“ im Fight-Modus (online, offizielle Karte) stellt dich in die Warteschlange. Ein Match startet ab vier Teilnehmern. Je länger du wartest, desto mehr NPC-Panzer füllen die Plätze auf (alle 6 Sekunden einer, höchstens drei). Der erste Wartende steuert die NPCs, verlässt er das Spiel, verschwinden sie. „Jetzt ohne Warteschlange starten“ überspringt das Warten.</p>
+
+    <h2>Online</h2>
+    <p class="muted">Bis zu 20 Spieler pro Raum (fünf öffentliche und private Räume über den 🚪-Knopf), jeder bekommt einen Parkplatz. Jeder Browser rechnet die Physik seines eigenen Fahrzeugs und schickt die Lage seiner Teile an den Server; die anderen sehen sie und können dagegen fahren. Name und Aussehen stellst du im <a href="konto.html#charakter">Konto</a> ein (auch ohne Anmeldung). Der Name darf nicht dem Benutzernamen eines anderen Kontos gleichen. Im Raum wird nichts auf dem Server gespeichert, ein Konto ist freiwillig.</p>
+  </main>
+</body>
+</html>
