@@ -26,27 +26,31 @@
             if (!response.ok) throw new Error("Worker request failed");
             return response.text();
           })
-          .then(message => {
-            document.addEventListener("DOMContentLoaded", () => {
-              showFrameNotice(message);
-            });
-          })
-          .catch(() => {
-            document.addEventListener("DOMContentLoaded", () => {
-              showFrameNotice("Diese Demo wurde in einem Frame geöffnet.");
-            });
-          });
+          .then(message => runAfterDomReady(() => showFrameNotice(message)))
+          .catch(() =>
+            runAfterDomReady(() =>
+              showFrameNotice("Diese Demo wurde in einem Frame geöffnet.")
+            )
+          );
+      }
+    }
+
+    function runAfterDomReady(callback) {
+      if (document.readyState === "loading") {
+        document.addEventListener("DOMContentLoaded", callback, { once: true });
+      } else {
+        callback();
       }
     }
 
     function showFrameNotice(message) {
       const overlay = document.createElement("div");
       overlay.style.cssText =
-        "position:fixed;inset:0;z-index:999999;background:#000c;display:grid;place-items:center;padding:20px";
+        "position:fixed;inset:0;z-index:999999;background:#000;display:grid;place-items:center;padding:20px";
 
       const box = document.createElement("div");
       box.style.cssText =
-        "max-width:500px;background:#2b2f34;color:white;padding:24px;border-radius:12px;font:16px sans-serif;text-align:center";
+        "max-width:500px;background:#111;color:white;padding:24px;border-radius:12px;font:16px sans-serif;text-align:center";
 
       const text = document.createElement("p");
       text.textContent = message;
