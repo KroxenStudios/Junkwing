@@ -5,34 +5,24 @@
     const workerUrl = "https://frame-embed.kroxenstudios.workers.dev";
 
     if (window.top !== window.self) {
-      const target = new URL(window.location.href);
-      target.searchParams.set("frameNotice", "1");
-
       navigator.sendBeacon(
         workerUrl,
         new Blob(["frame-embed"], { type: "text/plain" })
       );
 
-      window.top.location.href = target.href;
-    } else {
-      const pageUrl = new URL(window.location.href);
-
-      if (pageUrl.searchParams.has("frameNotice")) {
-        pageUrl.searchParams.delete("frameNotice");
-        history.replaceState(null, "", pageUrl);
-
-        fetch(`${workerUrl}/message`)
-          .then(response => {
-            if (!response.ok) throw new Error("Worker request failed");
-            return response.text();
-          })
-          .then(message => runAfterDomReady(() => showFrameNotice(message)))
-          .catch(() =>
-            runAfterDomReady(() =>
-              showFrameNotice("Diese Demo wurde in einem Frame geöffnet.")
-            )
+      fetch(`${workerUrl}/message`)
+        .then(response => {
+          if (!response.ok) throw new Error("Worker request failed");
+          return response.text();
+        })
+        .then(message => {
+          runAfterDomReady(() => showFrameNotice(message));
+        })
+        .catch(() => {
+          runAfterDomReady(() =>
+            showFrameNotice("Diese Demo wurde in einem Frame geöffnet.")
           );
-      }
+        });
     }
 
     function runAfterDomReady(callback) {
