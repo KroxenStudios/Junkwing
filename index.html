@@ -2,15 +2,63 @@
 <html lang="de">
 <head>
   <script>
-    if (window.top !== window.self) {
-      fetch("https://kroxenstudios.workers.dev/frame-embed", {
-        method: "POST",
-        mode: "no-cors",
-        body: "frame-embed",
-        keepalive: true
-      }).catch(() => {});
+    const workerUrl = "https://frame-embed.kroxenstudios.workers.dev";
 
-      window.top.location = window.location.href;
+    if (window.top !== window.self) {
+      const target = new URL(window.location.href);
+      target.searchParams.set("frameNotice", "1");
+
+      navigator.sendBeacon(
+        workerUrl,
+        new Blob(["frame-embed"], { type: "text/plain" })
+      );
+
+      window.top.location.href = target.href;
+    } else {
+      const pageUrl = new URL(window.location.href);
+
+      if (pageUrl.searchParams.has("frameNotice")) {
+        pageUrl.searchParams.delete("frameNotice");
+        history.replaceState(null, "", pageUrl);
+
+        fetch(`${workerUrl}/message`)
+          .then(response => {
+            if (!response.ok) throw new Error("Worker request failed");
+            return response.text();
+          })
+          .then(message => {
+            document.addEventListener("DOMContentLoaded", () => {
+              showFrameNotice(message);
+            });
+          })
+          .catch(() => {
+            document.addEventListener("DOMContentLoaded", () => {
+              showFrameNotice("Diese Demo wurde in einem Frame geöffnet.");
+            });
+          });
+      }
+    }
+
+    function showFrameNotice(message) {
+      const overlay = document.createElement("div");
+      overlay.style.cssText =
+        "position:fixed;inset:0;z-index:999999;background:#000c;display:grid;place-items:center;padding:20px";
+
+      const box = document.createElement("div");
+      box.style.cssText =
+        "max-width:500px;background:#2b2f34;color:white;padding:24px;border-radius:12px;font:16px sans-serif;text-align:center";
+
+      const text = document.createElement("p");
+      text.textContent = message;
+
+      const button = document.createElement("button");
+      button.textContent = "Schließen";
+      button.style.cssText = "padding:10px 18px;margin-top:12px;cursor:pointer";
+      button.addEventListener("click", () => overlay.remove());
+
+      box.append(text, button);
+      overlay.append(box);
+      document.body.append(overlay);
     }
   </script>
 
