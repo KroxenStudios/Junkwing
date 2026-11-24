@@ -14,7 +14,10 @@ const el = (tag, props = {}, ...kinder) => {
 
 // varianten: Array der haus-definitionen (haus.js: VARIANTEN); aktuell(): index der gewählten variante (-1 = keine); waehle(index)
 // eigenes(): das dokument des selbstgebauten hauses oder null; eigenIndex: die nummer, mit der waehle() es meldet; editor(): öffnet den haus-editor
-export function erzeugeHausWahl({ L, varianten, aktuell, waehle, en = () => false, eigenes = () => null, eigenIndex = 100, editor = null, defAusDoc = null }) {
+// plaetze(): [{ lot, b, t, frei, meins }] (leer = nur die feste reihe, keine wahl); waehleLot(lot): zieht das haus auf ein freies grundstück
+// presets(): Promise mit [{ name, doc }] aus dem ordner haeuser/ des spiels; waehlePreset(doc): stellt das preset als eigenes haus ein
+export function erzeugeHausWahl({ L, varianten, aktuell, waehle, en = () => false, eigenes = () => null, eigenIndex = 100, editor = null, defAusDoc = null, plaetze = () => [], waehleLot = () => {}, presets = null, waehlePreset = () => {} }) {
+  let presetListe = null;
   const wurzel = el("div", { id: "hausWahl", hidden: true, role: "dialog", "aria-label": L("Haus wählen", "Choose house") });
   document.body.append(wurzel);
 
@@ -54,11 +57,21 @@ export function erzeugeHausWahl({ L, varianten, aktuell, waehle, en = () => fals
             return el("button", { type: "button", class: "hwKarte" + (jetzt === eigenIndex ? " an" : ""), onclick: () => { waehle(eigenIndex); zu(); } },
               grundriss(def), el("b", {}, def.name.de), el("span", {}, `${def.b} × ${def.t} m · ${L("selbstgebaut", "self-built")}`));
           })()] : [])),
+        ...(presetListe?.length && defAusDoc ? [el("h3", {}, L("Haus-Presets", "House presets")), el("div", { class: "hwGrid" }, ...presetListe.map(p => {
+          const def = defAusDoc(p.doc);
+          return el("button", { type: "button", class: "hwKarte", onclick: () => { waehlePreset(p.doc); zu(); } }, grundriss(def), el("b", {}, p.name), el("span", {}, `${def.b} × ${def.t} m · ${L("Preset", "Preset")}`));
+        }))] : []),
+        ...(plaetze().length ? [el("h3", {}, L("Grundstück wählen", "Choose plot")), el("div", { class: "hwGrid" }, ...plaetze().map(p => el("button", {
+          type: "button", class: "hwKarte" + (p.meins ? " an" : ""), disabled: !p.frei && !p.meins, style: !p.frei && !p.meins ? "opacity:.4;cursor:not-allowed" : "",
+          onclick: () => { if (p.frei) { waehleLot(p.lot); zu(); } }
+        }, el("b", {}, `P${p.lot + 1}`), el("span", {}, `${p.b} × ${p.t} m · ${p.meins ? L("dein Grundstück", "your plot") : p.frei ? L("frei", "free") : L("belegt", "taken")}`))))] : []),
         el("div", { class: "hwFuss" },
           editor ? el("button", { type: "button", class: "hwZu", onclick: () => { zu(); editor(); } }, L("Haus-Editor öffnen", "Open house editor")) : "",
           el("button", { type: "button", class: "hwZu", onclick: () => zu() }, L("Schließen", "Close")))));
   }
-  function auf() { wurzel.hidden = false; zeichne(); requestAnimationFrame(() => wurzel.classList.add("an")); }
+  function auf() {
+    if (presets && !presetListe) presets().then(l => { presetListe = l || []; if (!wurzel.hidden) zeichne(); }).catch(() => { presetListe = []; });
+    wurzel.hidden = false; zeichne(); requestAnimationFrame(() => wurzel.classList.add("an")); }
   function zu() { wurzel.classList.remove("an"); wurzel.hidden = true; }
   return { oeffne: auf, schliesse: zu, offen: () => !wurzel.hidden, zeichne, waehle };
 }

@@ -37,9 +37,10 @@ const WERKZEUGE = [
   ["wuerfel", "Würfel", "Cube", "1"], ["entfernen", "Entfernen", "Remove", "2"], ["pinsel", "Farbe auftragen", "Paint", "3"],
   ["wand", "Wand", "Wall", "4"], ["quader", "Quader", "Block", "5"], ["raum", "Raum (hohl)", "Room (hollow)", "6"],
   ["tuer", "Tür", "Door", "7"], ["klappe", "Klappe", "Hatch", "8"], ["geheim", "Geheimwand", "Secret wall", "9"],
-  ["objekt", "Objekt setzen", "Place object", "0"], ["auswahl", "Auswählen", "Select", "V"], ["bloecke", "Blöcke wählen", "Select blocks", "B"]
+  ["boden", "Fußboden", "Floor", "F"], ["bodenweg", "Fußboden weg", "Remove floor", "G"], ["objekt", "Objekt setzen", "Place object", "0"], ["auswahl", "Auswählen", "Select", "V"], ["bloecke", "Blöcke wählen", "Select blocks", "B"]
 ];
-const BAU_WERKZEUGE = new Set(["wuerfel", "entfernen", "pinsel", "wand", "quader", "raum"]);
+const BAU_WERKZEUGE = new Set(["wuerfel", "entfernen", "pinsel", "wand", "quader", "raum", "boden", "bodenweg"]);
+const RECHTECK = ["wand", "quader", "raum", "boden", "bodenweg"];   // werkzeuge mit zwei ecken
 
 const css = `
 body.hauseditor #game > :not(#scene) { display: none !important; }
@@ -111,8 +112,9 @@ export function erzeugeHausEditor({ renderer, schnittstelle }) {
   szene.add(auswahlRahmen);
 
   let offen = false, dok = null, vox = null, hbVox = null;
+  let fv;   // fußboden: platten unten in den zellen, nur wo gesetzt
   let werkzeug = "wuerfel", modus = "wand";        // modus: was die bau-werkzeuge ändern: "wand" oder "hitbox"
-  let aktMat = 1, hoehe = 3, ebene = 0, objektTyp = "sofa", objektDreh = 0, hingeSeite = 1, hausTuer = false, hbZeigen = false;
+  let aktMat = 1, hoehe = 3, ebene = 0, leiterLaenge = F.LEITER_STANDARD, bodenEbene = 0, objektTyp = "sofa", objektDreh = 0, hingeSeite = 1, hausTuer = false, hbZeigen = false;
   let start = null;                               // erste ecke von wand, quader, raum
   let auswahl = null;                             // { art: "objekt" | "teil", i }
   let materialGlobal = false;                     // false: eine änderung von farbe/textur gilt nur für die nächsten blöcke (neues material)
@@ -142,6 +144,7 @@ export function erzeugeHausEditor({ renderer, schnittstelle }) {
     dok = F.bereinigeHaus(d) || F.neuesHaus();
     const [mx, mz, my] = dok.masse;
     vox = F.Voxel.ausQuader(dok.quader, mx, mz, my);
+    fv = F.Voxel.ausQuader(dok.fussboden, mx, mz, my);
     // die öffnungen der teile bleiben leer (beim bereinigen schon entfernt)
     hbVox = F.Voxel.ausQuader(F.kollisionsQuader(dok).map(q => [...q, 1]), mx, mz, my);
     if (!dok.material.some(m => m.id === aktMat)) aktMat = dok.material[0].id;
@@ -154,6 +157,7 @@ export function erzeugeHausEditor({ renderer, schnittstelle }) {
   // aktuellen stand in das dokument schreiben und kanonisch bereinigen
   function sync() {
     dok.quader = vox.zuQuader();
+    dok.fussboden = fv.zuQuader();
     dok.hitbox = { auto: dok.hitbox.auto, quader: dok.hitbox.auto ? [] : hbVox.zuQuader().map(q => q.slice(0, 6)) };
     return F.bereinigeHaus(dok);
   }
@@ -185,18 +189,24 @@ export function erzeugeHausEditor({ renderer, schnittstelle }) {
     const bw = mx * F.BLOCK, bt = mz * F.BLOCK;
     const gras = new THREE.Mesh(new THREE.PlaneGeometry(bw + 14, bt + 14), new THREE.MeshStandardMaterial({ color: "#6aa24f", roughness: 1 }));
     gras.rotation.x = -Math.PI / 2;
-    gras.position.y = -0.02;
+    const bodenY = (dok.keller || 0) * F.BLOCK;   // der boden liegt über dem keller; die raster-ebene 0 ist der kellerboden
+    gras.position.y = bodenY - 0.02;
+    if (bodenY) { gras.material.transparent = true; gras.material.opacity = 0.3; gras.material.depthWrite = false; }
     gruppe.add(gras);
     const pos = [];
     for (let x = 0; x <= mx; x++) pos.push((x - mx / 2) * F.BLOCK, 0.005, -bt / 2, (x - mx / 2) * F.BLOCK, 0.005, bt / 2);
     for (let z = 0; z <= mz; z++) pos.push(-bw / 2, 0.005, (z - mz / 2) * F.BLOCK, bw / 2, 0.005, (z - mz / 2) * F.BLOCK);
     const raster = new THREE.LineSegments(new THREE.BufferGeometry().setAttribute("position", new THREE.Float32BufferAttribute(pos, 3)), new THREE.LineBasicMaterial({ color: "#ffffff", transparent: true, opacity: 0.22 }));
     gruppe.add(raster);
+    if (bodenY) {   // kellerboden: rahmen der grundfläche auf bodenhöhe
+      const r = [-bw / 2, bodenY + 0.01, -bt / 2, bw / 2, bodenY + 0.01, -bt / 2, bw / 2, bodenY + 0.01, -bt / 2, bw / 2, bodenY + 0.01, bt / 2, bw / 2, bodenY + 0.01, bt / 2, -bw / 2, bodenY + 0.01, bt / 2, -bw / 2, bodenY + 0.01, bt / 2, -bw / 2, bodenY + 0.01, -bt / 2];
+      gruppe.add(new THREE.LineSegments(new THREE.BufferGeometry().setAttribute("position", new THREE.Float32BufferAttribute(r, 3)), new THREE.LineBasicMaterial({ color: "#ffd24a" })));
+    }
     // wände (mit schnitt: ab der ebene ausgeblendet) und bodenplatte
     let sicht = vox;
     if (ebene > 0) { sicht = new F.Voxel(mx, mz, my); for (const [k, m] of vox.zellen) if (Math.floor(k / (mx * mz)) < ebene) sicht.zellen.set(k, m); }
     const stand = sync() || dok;   // frisch bereinigt: die hitbox-liste ist aktuell
-    const def = F.defAusDoc({ ...stand, quader: sicht.zuQuader() });
+    const def = F.defAusDoc({ ...stand, keller: 0, quader: sicht.zuQuader() });   // keller 0: der editor rechnet im raster (ebene 0 = unten), der boden wird extra gezeichnet
     for (const [x, y, z, sx, sy, sz, farbe, art] of def.boxen) {
       const m = new THREE.Mesh(boxGeo(sx, sy, sz), materialFuer(farbe, art));
       m.position.set(x, y, z);
@@ -248,7 +258,7 @@ export function erzeugeHausEditor({ renderer, schnittstelle }) {
     });
     // einrichtung
     dok.objekte.forEach((o, i) => {
-      const g = objektGruppe(o.a);
+      const g = objektGruppe(o.a, o.n);
       const p = wp(o.x, o.y, o.z);
       g.position.set(p.x, p.y, p.z);
       g.rotation.y = o.r * Math.PI / 2;
@@ -258,9 +268,9 @@ export function erzeugeHausEditor({ renderer, schnittstelle }) {
     });
     zeigeAuswahl();
   }
-  function objektGruppe(typ) {
+  function objektGruppe(typ, laenge) {
     const g = new THREE.Group();
-    for (const [ox, oy, oz, sx, sy, sz, farbe, extra] of F.MOEBEL[typ].teile) {
+    for (const [ox, oy, oz, sx, sy, sz, farbe, extra] of F.moebelTeile(typ, laenge)) {
       const m = new THREE.Mesh(geoBox, materialFuer(farbe, "glatt", { roughness: 0.8, ...(extra || {}) }));
       m.scale.set(sx, sy, sz);
       m.position.set(ox, oy, oz);
@@ -307,14 +317,22 @@ export function erzeugeHausEditor({ renderer, schnittstelle }) {
   }
   // die zelle für bauwerkzeuge: vor der getroffenen fläche oder auf dem boden; nach dem ersten klick auf der ebene des startpunkts
   function zielZelle() {
-    if (start && ["wand", "quader", "raum"].includes(werkzeug)) {
+    if (start && RECHTECK.includes(werkzeug)) {
       const { o, d } = blockStrahl();
       if (Math.abs(d.y) < 1e-6) return null;
       const t = (start.y - o.y) / d.y;
       if (t < 0) return null;
       return { x: Math.floor(o.x + d.x * t), y: start.y, z: Math.floor(o.z + d.z * t) };
     }
-    return B.setzZelle(treffer(), bodenPunkt());
+    const t = treffer();
+    if (!t && (werkzeug === "boden" || werkzeug === "bodenweg")) {   // fußboden ohne block darunter: auf der gewählten ebene (rechte leiste)
+      const { o, d } = blockStrahl();
+      if (Math.abs(d.y) < 1e-6) return null;
+      const tt = (bodenEbene - o.y) / d.y;
+      if (tt < 0) return null;
+      return { x: Math.floor(o.x + d.x * tt), y: bodenEbene, z: Math.floor(o.z + d.z * tt) };
+    }
+    return B.setzZelle(t, bodenPunkt());
   }
   const innen = z => z && vox.drin(z.x, z.y, z.z);
 
@@ -361,6 +379,15 @@ export function erzeugeHausEditor({ renderer, schnittstelle }) {
         vox.setze(t.x, t.y, t.z, aktMat);
         break;
       }
+      case "boden": case "bodenweg": {
+        // fußboden: zwei ecken auf einer ebene, die platte liegt unten in der zelle (auf dem block darunter oder dem boden)
+        if (!erstes) return;
+        if (!innen(z)) return;
+        if (!start) { start = z; meldung(L("Zweite Ecke anklicken (Esc bricht ab)", "Click the second corner (Esc cancels)")); return; }
+        for (const [x, y, zz] of B.zellenQuader(start, z, 1)) if (fv.drin(x, y, zz)) { if (werkzeug === "boden") fv.setze(x, y, zz, aktMat); else fv.nimm(x, y, zz); }
+        start = null;
+        break;
+      }
       case "wand": case "quader": case "raum": {
         if (!erstes) return;
         if (!innen(z)) return;
@@ -382,7 +409,7 @@ export function erzeugeHausEditor({ renderer, schnittstelle }) {
         if (!erstes) return;
         const p = objektPunkt();
         if (!p) return;
-        dok.objekte.push({ a: objektTyp, x: p.x, y: p.y, z: p.z, r: objektDreh });
+        dok.objekte.push({ a: objektTyp, x: p.x, y: p.y, z: p.z, r: objektDreh, ...(objektTyp === "leiter" ? { n: leiterLaenge } : {}) });
         auswahl = { art: "objekt", i: dok.objekte.length - 1 };
         break;
       }
@@ -427,6 +454,10 @@ export function erzeugeHausEditor({ renderer, schnittstelle }) {
       const z = zielZelle();
       if (!z || !innen(z)) return;
       if (start && werkzeug !== "wuerfel" && werkzeug !== "pinsel") {
+        if (werkzeug === "boden" || werkzeug === "bodenweg") {
+          geistBox(Math.min(start.x, z.x), start.y, Math.min(start.z, z.z), Math.abs(z.x - start.x) + 1, 0.2, Math.abs(z.z - start.z) + 1);
+          return;
+        }
         const x0 = Math.min(start.x, z.x), x1 = Math.max(start.x, z.x) + 1, z0 = Math.min(start.z, z.z), z1 = Math.max(start.z, z.z) + 1;
         if (werkzeug === "wand") {
           const lang = Math.abs(z.x - start.x) >= Math.abs(z.z - start.z);
@@ -434,7 +465,7 @@ export function erzeugeHausEditor({ renderer, schnittstelle }) {
         } else geistBox(x0, start.y, z0, x1 - x0, hoehe, z1 - z0);
         return;
       }
-      geistBox(z.x, z.y, z.z, 1, 1, 1);
+      if (werkzeug === "boden" || werkzeug === "bodenweg") geistBox(z.x, z.y, z.z, 1, 0.2, 1); else geistBox(z.x, z.y, z.z, 1, 1, 1);
     } else if (werkzeug === "objekt") {
       const p = objektPunkt();
       if (!p) return;
@@ -504,7 +535,7 @@ export function erzeugeHausEditor({ renderer, schnittstelle }) {
     ev.stopImmediatePropagation();
     const k = ev.key.toLowerCase();
     if (ev.ctrlKey && k === "z") { ev.preventDefault(); zurueck(); return; }
-    if (k === "escape") { start = null; auswahl = null; blockSel = new Set(); baueAlles(); return; }
+    if (k === "escape") { if (!start && !auswahl && !blockSel.size) { offen = false; wurzel.hidden = true; document.body.classList.remove("hauseditor"); schnittstelle.hauptmenue?.(); return; } start = null; auswahl = null; blockSel = new Set(); baueAlles(); return; }
     if (k === "r") { if (auswahl?.art === "objekt") { sichere(); const o = dok.objekte[auswahl.i]; o.r = (o.r + 1) % 4; baueSzene(); } else objektDreh = (objektDreh + 1) % 4; return; }
     if (k === "delete" || k === "backspace") { loescheAuswahl(); return; }
     const w = WERKZEUGE.find(x => x[3].toLowerCase() === k);
@@ -680,6 +711,7 @@ export function erzeugeHausEditor({ renderer, schnittstelle }) {
         el("option", { value: 0, selected: !dok.boden }, L("kein Boden", "no floor")), ...dok.material.map(x => el("option", { value: x.id, selected: x.id === dok.boden }, `${x.id} · ${x.textur}`)))));
 
     // optionen des werkzeugs
+    if (werkzeug === "boden" || werkzeug === "bodenweg") rechts.append(el("h3", {}, L("Fußboden", "Floor")), schieber(L("Ebene (ohne Block darunter)", "Level (no block below)"), bodenEbene, 0, dok.masse[2] - 1, v => { bodenEbene = v; }), el("div", { class: "hilfe" }, L("Zwei Ecken anklicken: die Platte liegt unten in der Zelle. Auf einen Block gezeigt liegt sie darauf, sonst auf der Ebene oben. Das Material ist die gewählte Farbe.", "Click two corners: the slab lies at the bottom of the cell. Pointing at a block puts it on top; otherwise it goes on the level above. The material is the selected colour.")));
     if (["wand", "quader", "raum"].includes(werkzeug)) rechts.append(el("h3", {}, L("Höhe", "Height")), schieber(L("Höhe (Blöcke)", "Height (blocks)"), hoehe, 1, dok.masse[2], v => { hoehe = v; }));
     if (["tuer", "klappe", "geheim"].includes(werkzeug)) {
       rechts.append(el("h3", {}, L("Teil", "Part")),
@@ -689,8 +721,10 @@ export function erzeugeHausEditor({ renderer, schnittstelle }) {
     }
     if (werkzeug === "objekt" || (werkzeug === "auswahl" && auswahl?.art === "objekt")) {
       if (werkzeug === "objekt") rechts.append(el("h3", {}, L("Objekt", "Object")), el("div", { class: "zeile" }, ...F.MOEBEL_IDS.map(id => el("button", { type: "button", class: id === objektTyp ? "an" : "", onclick: () => { objektTyp = id; baueRechts(); } }, L(F.MOEBEL[id].de, F.MOEBEL[id].en)))));
+      if (werkzeug === "objekt" && objektTyp === "leiter") rechts.append(schieber(L("Leiterlänge (Blöcke)", "Ladder length (blocks)"), leiterLaenge, 1, dok.masse[2], v => { leiterLaenge = v; }), el("div", { class: "hilfe" }, L("Die Schienen stehen an der Wand (hinten); oben steigt man nach vorn ab. R dreht.", "The rails stand at the wall (back); at the top you step off to the front. R rotates.")));
       if (auswahl?.art === "objekt") {
         const o = dok.objekte[auswahl.i];
+        if (o.a === "leiter") rechts.append(schieber(L("Leiterlänge (Blöcke)", "Ladder length (blocks)"), o.n || F.LEITER_STANDARD, 1, dok.masse[2], () => {}, v => { sichere(); o.n = v; baueSzene(); }));
         rechts.append(el("h3", {}, L("Auswahl", "Selection")), el("div", { class: "zeile" },
           el("button", { type: "button", onclick: () => { sichere(); o.r = (o.r + 1) % 4; baueSzene(); } }, L("Drehen (R)", "Rotate (R)")),
           el("button", { type: "button", onclick: () => { sichere(); o.y = Math.min(dok.masse[2], o.y + 0.5); baueSzene(); } }, L("Höher", "Higher")),
@@ -721,11 +755,14 @@ export function erzeugeHausEditor({ renderer, schnittstelle }) {
 
     // schnitt und größe
     rechts.append(el("h3", {}, L("Ansicht", "View")), schieber(L("Schnitt: Ebene (0 = alles)", "Cut level (0 = all)"), ebene, 0, dok.masse[2], v => { ebene = v; planeBau(); }));
+    rechts.append(el("h3", {}, L("Keller", "Basement")),
+      schieber(L("Ebenen unter dem Boden", "Levels below ground"), dok.keller || 0, 0, Math.min(F.GRENZEN.keller, dok.masse[2] - 1), () => {}, v => { sichere(); dok.keller = v; baueAlles(); }),
+      el("div", { class: "hilfe" }, L("Die untersten Ebenen liegen unter dem Boden (gelber Rahmen = Bodenhöhe, 0,5 m je Ebene, höchstens 4 m). Im Spiel wird dafür eine Grube in die Wohngegend geschnitten.", "The lowest levels lie below ground (yellow frame = ground level, 0.5 m per level, at most 4 m). In the game a pit is cut into the neighbourhood for it.")));
     rechts.append(el("h3", {}, L("Größe des Rasters", "Grid size")),
       schieber(L("Breite", "Width"), dok.masse[0], F.GRENZEN.x[0], F.GRENZEN.x[1], () => {}, v => groesse(0, v)),
       schieber(L("Tiefe", "Depth"), dok.masse[1], F.GRENZEN.z[0], F.GRENZEN.z[1], () => {}, v => groesse(1, v)),
       schieber(L("Höhe", "Height"), dok.masse[2], F.GRENZEN.y[0], F.GRENZEN.y[1], () => {}, v => groesse(2, v)),
-      el("div", { class: "hilfe" }, L("Ein Block = 0,5 m. Das Grundstück fasst 26 × 20 Blöcke (13 × 10 m).", "One block = 0.5 m. The plot holds 26 × 20 blocks (13 × 10 m).")));
+      el("div", { class: "hilfe" }, L("Ein Block = 0,5 m. Das Grundstück fasst 80 × 80 Blöcke (40 × 40 m), bis zu 100 Blöcke (50 m) hoch. Fußboden gibt es nur, wo du ihn mit dem Werkzeug setzt.", "One block = 0.5 m. The plot holds 80 × 80 blocks (40 × 40 m), up to 100 blocks (50 m) high. Floor exists only where you place it with the tool.")));
   }
   function groesse(achse, wert) {
     sichere();
@@ -778,9 +815,9 @@ export function erzeugeHausEditor({ renderer, schnittstelle }) {
     if (tasten.has("s") || tasten.has("arrowdown")) fw -= 1;
     if (tasten.has("d") || tasten.has("arrowright")) sd += 1;
     if (tasten.has("a") || tasten.has("arrowleft")) sd -= 1;
-    cam.x = klammer(cam.x + (vx * fw - vz * sd) * tempo, -20, 20);
-    cam.z = klammer(cam.z + (vz * fw + vx * sd) * tempo, -20, 20);
-    if (tasten.has("e")) cam.y = Math.min(12, cam.y + tempo);
+    cam.x = klammer(cam.x + (vx * fw - vz * sd) * tempo, -F.GRENZEN.x[1] / 2, F.GRENZEN.x[1] / 2);
+    cam.z = klammer(cam.z + (vz * fw + vx * sd) * tempo, -F.GRENZEN.z[1] / 2, F.GRENZEN.z[1] / 2);
+    if (tasten.has("e")) cam.y = Math.min(dok.masse[2] * F.BLOCK + 4, cam.y + tempo);
     if (tasten.has("q")) cam.y = Math.max(0, cam.y - tempo);
     setzeKamera();
     if (auswahlRahmen.visible) auswahlRahmen.update();

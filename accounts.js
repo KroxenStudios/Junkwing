@@ -214,6 +214,7 @@ function abmelden(server = true) {
 }
 
 function aktualisiereKnopf() {
+  pflichtPruefen();
   if (!knopf) return;
   const u = store.get(USER_KEY);
   knopf.textContent = u ? u : L("Anmelden", "Sign in");
@@ -320,7 +321,7 @@ let code = null;
 
 function zeige() {
   inhalt.replaceChildren();
-  if (!seite) inhalt.append(el("button", { type: "button", class: "kontoZu", textContent: "✕", ariaLabel: L("Schließen", "Close"), onclick: () => dialog.close() }));
+  if (!seite && !window.JUNKWING_DESKTOP) inhalt.append(el("button", { type: "button", class: "kontoZu", textContent: "✕", ariaLabel: L("Schließen", "Close"), onclick: () => dialog.close() }));
   const warnung = angemeldet() ? warnungLesen() : null;
   if (warnung) {
     inhalt.append(el("div", { class: "kontoMeldung fehler kontoWarnung", role: "alert" },
@@ -655,9 +656,32 @@ function baueOberflaeche() {
 
   inhalt = el("div", { class: "kontoInhalt" });
   dialog = el("dialog", { id: "kontoDialog" }, inhalt);
-  dialog.addEventListener("click", e => { if (e.target === dialog) dialog.close(); });
+  dialog.addEventListener("click", e => { if (e.target === dialog && !pflicht) dialog.close(); });
+  // desktop-app: ohne konto geht es nicht weiter, esc und schliessen werden abgefangen
+  dialog.addEventListener("cancel", e => { if (pflicht && !angemeldet()) e.preventDefault(); });
+  dialog.addEventListener("close", () => { if (pflicht && !angemeldet()) pflichtPruefen(); });
   document.body.append(dialog);
   aktualisiereKnopf();
+}
+
+// in der desktop-app (einmal anmelden, token bleibt lokal gespeichert) ist ein konto pflicht
+const pflicht = !!window.JUNKWING_DESKTOP;
+function pflichtPruefen() {
+  if (!pflicht || !dialog || seite) return;
+  document.body.classList.toggle("kontoPflicht", !angemeldet());
+  if (angemeldet()) { if (dialog.open) dialog.close(); return; }
+  if (!dialog.open) { offlineHinweis(); zeige(); dialog.showModal(); }
+}
+// ohne netz laesst sich kein konto anlegen oder anmelden: das steht dann gut sichtbar im dialog
+function offlineHinweis() {
+  if (navigator.onLine) { if (hinweisArt === "offline") { hinweis = ""; hinweisArt = ""; } return; }
+  hinweis = L("Keine Internetverbindung. Für die erste Anmeldung brauchst du einmalig Internet – danach läuft Junkwing auch offline. Verbinde dich und versuche es erneut.",
+    "No internet connection. You need to be online once for the first sign-in – after that Junkwing also works offline. Please connect and try again.");
+  hinweisArt = "offline";
+}
+if (pflicht) {
+  addEventListener("offline", () => { if (dialog?.open && !angemeldet()) { offlineHinweis(); zeige(); } });
+  addEventListener("online", () => { if (dialog?.open && !angemeldet()) { offlineHinweis(); zeige(); } });
 }
 
 function einbetten(container) {
@@ -679,6 +703,7 @@ export const Konto = {
   start(h) {
     hooks = h;
     baueOberflaeche();
+    pflichtPruefen();
     if (angemeldet()) anmeldeTag().then(() => abgleichen(false));
   },
   stand,

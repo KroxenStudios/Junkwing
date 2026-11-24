@@ -75,7 +75,8 @@ async function kaufen(p) {
 }
 
 function einladungsLink() {
-  const u = new URL(location.href);
+  // in der desktop-app (junkwing://) zeigt der link auf die oeffentliche web-version
+  const u = new URL(location.protocol === "junkwing:" ? "https://kroxenstudios.github.io/WaitingGames/MultiplayerRoom/" : location.href);
   u.search = "";
   u.hash = "";
   u.searchParams.set("ref", daten.ref.code);

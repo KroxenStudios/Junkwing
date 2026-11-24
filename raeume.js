@@ -69,7 +69,9 @@ export function startRaeume({ httpBasis, aktuell, wechseln }) {
       wahl(id);
     } }, privat, el("button", { type: "submit", textContent: L("Beitreten", "Join") }));
 
-    const link = () => `${location.origin}${location.pathname}?raum=${encodeURIComponent(aktuell())}`;
+    const WEB_BASIS = "https://kroxenstudios.github.io/WaitingGames/MultiplayerRoom/";
+    // in der desktop-app (junkwing://) zeigt der link auf die oeffentliche web-version
+    const link = () => `${location.protocol === "junkwing:" ? WEB_BASIS : location.origin + location.pathname}?raum=${encodeURIComponent(aktuell())}`;
     const einladung = () => {
       const name = raumTitel(aktuell()).replace(/^# /, "");
       return L(`Komm in meinen Junkwing-Raum „${name}“ und fahr mit! ${link()}`, `Join my Junkwing room "${name}" and drive with me! ${link()}`);

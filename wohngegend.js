@@ -1,5 +1,5 @@
 import * as THREE from "three";
-import { hausPos, briefkastenPos, HAUS_Z, WOHN_X, KLEIN_VERSATZ, setzeWohnHoehe, wohnHoehe } from "./haus.js";
+import { hausPos, briefkastenPos, HAUS_Z, WOHN_X, KLEIN_VERSATZ, setzeWohnHoehe, wohnHoehe, KELLER_TIEFE, gruben } from "./haus.js";
 import { baueBaeume } from "./baeume.js";
 
 // wohngegend: 20 grundstücke in einer reihe an einer straße, auf einer eigenen, eingeebneten fläche weit weg vom flughafen und
@@ -8,10 +8,10 @@ import { baueBaeume } from "./baeume.js";
 // spieler (haus.js). es gibt keine anderen häuser. maßstab wie die häuser: die figur ist etwa 1 m hoch, also sind bäume 3 bis 5 m,
 // laternen 3 m und die straße 6 m breit.
 
-const ANZAHL = 20, BREITE = 16;
+const ANZAHL = 20, BREITE = 48;
 const STRASSE_Z = HAUS_Z + KLEIN_VERSATZ + 14;          // mitte der straße, hinter dem kleinen parkplatz und dem gehweg
 const X0 = WOHN_X - (ANZAHL * BREITE) / 2 - 20, X1 = WOHN_X + (ANZAHL * BREITE) / 2 + 20, XM = WOHN_X, XL = X1 - X0;
-const GARTEN_Z0 = HAUS_Z - 16, GARTEN_Z1 = HAUS_Z + KLEIN_VERSATZ + 6.2;   // grundstück: vom garten hinter dem haus bis zum parkplatz
+const GARTEN_Z0 = HAUS_Z - 28, GARTEN_Z1 = HAUS_Z + KLEIN_VERSATZ + 6.2;   // grundstück: vom garten hinter dem haus bis zum parkplatz
 const FLAECHE = { x0: X0 - 8, x1: X1 + 8, z0: GARTEN_Z0 - 8, z1: STRASSE_Z + 12 };   // wird eingeebnet
 const RAND = 140;                                        // m: weicher übergang zum gelände
 
@@ -35,7 +35,7 @@ export function flacheWohngegendAb(d) {
     }
   }
   if (!anzahl) return 0;
-  const y = Math.round((summe / anzahl) * 10) / 10;
+  const y = d.wohnY ?? (d.wohnY = Math.round((summe / anzahl) * 10) / 10);   // einmal merken: ein zweiter aufruf mittelt sonst über die abgesenkten werte
   for (let ix = 0; ix < n; ix++) {
     const x = d.x0 + ix * s;
     if (x < FLAECHE.x0 - RAND || x > FLAECHE.x1 + RAND) continue;
@@ -46,7 +46,10 @@ export function flacheWohngegendAb(d) {
       if (abstand >= RAND) continue;
       const w = 1 - glatt(abstand / RAND);
       const k = ix * n + iz;
-      h[k] += (y - h[k]) * w;
+      // der kern der fläche liegt KELLER_TIEFE unter der straße (die bodenplatten in baueWohngegend füllen ihn wieder auf, mit gruben für keller);
+      // die knoten am rand bleiben auf höhe y, die absenkung verschwindet unter den platten, ohne stufe im gelände
+      const kern = abstand === 0 && x >= FLAECHE.x0 + s && x <= FLAECHE.x1 - s && z >= FLAECHE.z0 + s && z <= FLAECHE.z1 - s;
+      h[k] += ((kern ? y - KELLER_TIEFE : y) - h[k]) * w;
     }
   }
   // bäume und felsen (flache listen x, z, größe) auf der fläche entfernen
@@ -91,11 +94,49 @@ export function baueWohngegend({ scene, world, RAPIER, mat }) {
     return m;
   };
 
+  // bodenplatten: die fläche liegt KELLER_TIEFE tiefer (siehe flacheWohngegendAb), diese platten bilden den boden auf höhe 0. ein grundstück
+  // mit keller bekommt eine grube: vier platten um das loch und eine füllung darunter bis zum kellerboden. alles fest (collider) und sichtbar
+  const seitenMat = mat("#7a6048", { roughness: 1 }), grasMat = mat("#5f9f50", { roughness: 0.95 }), fuellMat = mat("#4a3b2c", { roughness: 1 });
+  const platte = (liste, x0, x1, z0, z1, y0, y1, mats) => {
+    if (x1 - x0 < 0.01 || z1 - z0 < 0.01 || y1 - y0 < 0.01) return;
+    const m = new THREE.Mesh(geoBox, mats);
+    m.scale.set(x1 - x0, y1 - y0, z1 - z0);
+    m.position.set((x0 + x1) / 2, (y0 + y1) / 2, (z0 + z1) / 2);
+    m.receiveShadow = true;
+    gr.add(m);
+    const c = world.createCollider(RAPIER.ColliderDesc.cuboid((x1 - x0) / 2, (y1 - y0) / 2, (z1 - z0) / 2).setTranslation(m.position.x, m.position.y + Y, m.position.z).setFriction(0.95));
+    liste.push({ m, c });
+  };
+  const oben = [seitenMat, seitenMat, grasMat, seitenMat, seitenMat, seitenMat], dunkel = fuellMat;
+  const weg = liste => { for (const { m, c } of liste.splice(0)) { gr.remove(m); try { world.removeCollider(c, true); } catch {} } };
+  const xsLot = Array.from({ length: ANZAHL }, (_, i) => hausPos(i).x);
+  const lotPlatten = Array.from({ length: ANZAHL }, () => []), rasen = [];
+  const baueLotPlatten = (lot, g) => {
+    const liste = lotPlatten[lot];
+    if (!liste) return;
+    weg(liste);
+    const cx = xsLot[lot], sx0 = cx - BREITE / 2, sx1 = cx + BREITE / 2, z0 = FLAECHE.z0, z1 = FLAECHE.z1;
+    if (rasen[lot]) rasen[lot].visible = !g;   // ohne keller liegt der bunte rasen über der platte, mit keller deckte er die grube zu
+    if (!g) return platte(liste, sx0, sx1, z0, z1, -KELLER_TIEFE, 0, oben);
+    const hx0 = Math.max(sx0, cx + g.rect[0] + 0.05), hz0 = Math.max(z0, HAUS_Z + g.rect[1] + 0.05), hx1 = Math.min(sx1, cx + g.rect[2] - 0.05), hz1 = Math.min(z1, HAUS_Z + g.rect[3] - 0.05);
+    platte(liste, sx0, hx0, z0, z1, -KELLER_TIEFE, 0, oben);
+    platte(liste, hx1, sx1, z0, z1, -KELLER_TIEFE, 0, oben);
+    platte(liste, hx0, hx1, z0, hz0, -KELLER_TIEFE, 0, oben);
+    platte(liste, hx0, hx1, hz1, z1, -KELLER_TIEFE, 0, oben);
+    platte(liste, hx0, hx1, hz0, hz1, -KELLER_TIEFE, -g.tiefe, dunkel);   // füllung unter dem kellerboden (nichts, wenn der keller so tief ist wie die absenkung)
+  };
+  // ränder links und rechts von der grundstücksreihe (straße, gehweg, hecken stehen darauf)
+  const rl = [], rr = [];
+  platte(rl, FLAECHE.x0, Math.min(...xsLot) - BREITE / 2, FLAECHE.z0, FLAECHE.z1, -KELLER_TIEFE, 0, oben);
+  platte(rr, Math.max(...xsLot) + BREITE / 2, FLAECHE.x1, FLAECHE.z0, FLAECHE.z1, -KELLER_TIEFE, 0, oben);
+
   // grundstücke: je ein rasenstück (leicht wechselnde farbe), solange niemand dort wohnt bleibt es eine leere wiese
   const xs = Array.from({ length: ANZAHL }, (_, i) => hausPos(i).x).sort((a, b) => a - b);
   const tief = GARTEN_Z1 - GARTEN_Z0;
   const gruene = ["#5f9f50", "#68a756", "#5a9a4c", "#6aa95a"];
-  xs.forEach((x, i) => flach(BREITE - 0.2, tief, gruene[i % gruene.length], x, (GARTEN_Z0 + GARTEN_Z1) / 2, -1, 0.012));
+  xs.forEach((x, i) => { rasen[i] = flach(BREITE - 0.2, tief, gruene[i % gruene.length], x, (GARTEN_Z0 + GARTEN_Z1) / 2, -1, 0.012); });
+  for (let lot = 0; lot < ANZAHL; lot++) baueLotPlatten(lot, gruben.map.get(lot) || null);
+  gruben.hoerer = baueLotPlatten;   // ab jetzt schneiden häuser mit keller ihre grube in die platten
   // gehwege und straße (6 m) davor
   flach(XL, 3, "#bdb9ae", XM, STRASSE_Z - 5.5, -2, 0.025);
   flach(XL, 3, "#bdb9ae", XM, STRASSE_Z + 5.5, -2, 0.025);
@@ -134,7 +175,7 @@ export function baueWohngegend({ scene, world, RAPIER, mat }) {
   const arten = [1, 2, 5, 1, 4, 2];
   let n = 0;
   for (let x = X0 + 6; x < X1; x += 12) baeume.push([x + (rnd() - 0.5) * 3, STRASSE_Z + 8, 2.4 + rnd() * 1.1, arten[n++ % arten.length]]);
-  for (const x of xs) baeume.push([x + (rnd() < 0.5 ? -5 : 5) + rnd(), HAUS_Z - 8 - rnd() * 3, 2 + rnd() * 1.2, arten[n++ % arten.length]]);
+  for (const x of xs) baeume.push([x + (rnd() < 0.5 ? -1 : 1) * (BREITE / 2 - 3) + rnd(), GARTEN_Z0 + 3 + rnd() * 2, 2 + rnd() * 1.2, arten[n++ % arten.length]]);
   baueBaeume(baeume, () => 0, gr);
 
   // briefkasten am rand jedes grundstücks (haus.js legt die stelle fest: dort lässt er sich öffnen, wenn ein haus da steht)

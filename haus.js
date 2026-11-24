@@ -1,5 +1,5 @@
 import * as THREE from "three";
-import { MOEBEL, MOEBEL_IDS, defAusDoc } from "./hausformat.js";
+import { MOEBEL, MOEBEL_IDS, defAusDoc, moebelTeile } from "./hausformat.js";
 import { materialFuer, boxGeo, istGlas } from "./texturen.js";
 
 // häuser: jeder spieler hat ein festes haus (keine räder, kein verschieben). der server vergibt es mit dem parkplatz (state.hs)
@@ -10,18 +10,30 @@ export const EIGEN = 100;   // hs-variante eines selbstgebauten hauses (das doku
 export const HAUS_VARIANTEN = 8;   // 3 kleine hütten und 5 große häuser (siehe VARIANTEN)
 export const HAUS_Z = 1780;           // mitte der häuser, die vorderseite zeigt nach +z
 export const WOHN_X = 1300;           // mitte der reihe: eine eigene, eingeebnete fläche weit weg vom flughafen (siehe wohngegend.js)
-export const KLEIN_VERSATZ = 12;      // abstand der mitte des kleinen parkplatzes vor der hausmitte
+export const KLEIN_VERSATZ = 28;      // abstand der mitte des kleinen parkplatzes vor der hausmitte
 export const KLEIN_K = 1;             // legacy-größe
 // maße in blöcken zu 0,5 m (wie das bausystem, BAU.ZELLE): die figur ist etwa 1 m = 2 blöcke hoch, ein haus also nur knapp doppelt so hoch
 export const BLOCK = 0.5;
-const ABSTAND = 16, ANZAHL = 20;
+const ABSTAND = 48, ANZAHL = 20;   // grundstücke 48 m breit (häuser bis 40 x 40 m)
 let wohnY = 0;                        // höhe der fläche (das gelände wird dort eingeebnet), ohne weltdaten 0
+export const KELLER_TIEFE = 4;        // m: so tief ist die wohngegend unter der straße abgesenkt (höchstens 8 ebenen keller); wohngegend.js füllt sie mit bodenplatten
+// gruben: pro grundstück das loch im boden für den keller { rect: [x0, z0, x1, z1] relativ zur hausmitte, tiefe } oder null. wohngegend.js hört zu
+export const gruben = {
+  map: new Map(), hoerer: null,
+  setze(lot, g) { if (g) this.map.set(lot, g); else this.map.delete(lot); this.hoerer?.(lot, g || null); }
+};
 export const setzeWohnHoehe = y => { wohnY = Number(y) || 0; };
 export const wohnHoehe = () => wohnY;
 const GEHEIM_ZYKLUS = 12000, GEHEIM_OFFEN = 3000;   // geheimwand: alle 12 s für 3 s ohne hitbox
 
-// position der hausmitte am boden: ein grundstück je parkplatznummer, 20 in einer reihe, 16 m breit
+// position der hausmitte am boden: ein grundstück je parkplatznummer, 20 in einer reihe, 48 m breit
+// grundstücke aus dem welt-editor (weltplatz.js, plaetze mit x, z, b, t, y): ohne sie gilt die alte reihe aus 20 grundstücken
+let plaetze = null;
+export function setzePlaetze(liste) { plaetze = liste && liste.length ? new Map(liste.map(p => [p.id, p])) : null; }
+export const plaetzeListe = () => (plaetze ? [...plaetze.values()] : null);
+export const lotIds = () => (plaetze ? [...plaetze.keys()] : Array.from({ length: ANZAHL }, (_, i) => i));
 export function hausPos(lot) {
+  if (plaetze) { const p = plaetze.get(lot); if (p) return new THREE.Vector3(p.x, p.y || 0, p.z); }
   return new THREE.Vector3(WOHN_X + ((((lot % ANZAHL) + ANZAHL) % ANZAHL) - (ANZAHL - 1) / 2) * ABSTAND, wohnY, HAUS_Z);
 }
 export const kleinerPlatz = lot => hausPos(lot).add(new THREE.Vector3(0, 0, KLEIN_VERSATZ));
@@ -168,13 +180,13 @@ export function erzeugeHaeuser({ scene, world, RAPIER, mat, textSprite }) {
   // schild je grundstück: "frei" ohne bewohner, mit haus der parkplatz. beide liegen bereit, sichtbar ist je eines
   const schilder = [];
   if (textSprite) {
-    for (let lot = 0; lot < ANZAHL; lot++) {
+    for (const lot of lotIds()) {
       const p = kleinerPlatz(lot);
       const frei = textSprite(`Grundstück ${lot + 1} · frei`, { skala: 2.2, bg: "rgba(60,110,60,0.92)" });
       const belegt = textSprite(`P${lot + 1} · Haus`, { skala: 2.2, bg: "rgba(20,60,160,0.92)" });
       for (const sp of [frei, belegt]) { sp.position.set(p.x - 6.9, p.y + 1.7, p.z + 6.4); scene.add(sp); }
       belegt.visible = false;
-      schilder.push({ frei, belegt });
+      schilder.push({ lot, frei, belegt });
     }
   }
 
@@ -207,14 +219,16 @@ export function erzeugeHaeuser({ scene, world, RAPIER, mat, textSprite }) {
     }
     for (const [mx, my, mz, sx, sy, sz] of def.kollision || []) cols.push(collider(basis.clone().add(new THREE.Vector3(mx, my, mz)), [sx / 2, sy / 2, sz / 2]));
     // einrichtung: sichtbare teile und eine feste hitbox je stück (der teppich liegt nur auf dem boden)
-    for (const [typ, mx, mz, dreh, my0] of def.moebel) {
+    const leitern = [];
+    for (const l of def.leitern || []) leitern.push({ lot, x: basis.x + l.x, z: basis.z + l.z, y0: basis.y + l.y0, y1: basis.y + l.y1, ex: l.ex, ez: l.ez });
+    for (const [typ, mx, mz, dreh, my0, laenge] of def.moebel) {
       const hoehe = my0 || 0;
       const m = MOEBEL[typ];
       if (!m) continue;
       const g = new THREE.Group();
       g.position.set(mx, hoehe, mz);
       g.rotation.y = (dreh || 0) * Math.PI / 2;
-      for (const [ox, oy, oz, sx, sy, sz, farbe, extra] of m.teile) {
+      for (const [ox, oy, oz, sx, sy, sz, farbe, extra] of moebelTeile(typ, laenge)) {
         const t = new THREE.Mesh(geoBox, mat(farbe, { roughness: 0.8, ...(extra || {}) }));
         t.scale.set(sx, sy, sz);
         t.position.set(ox, oy, oz);
@@ -254,6 +268,7 @@ export function erzeugeHaeuser({ scene, world, RAPIER, mat, textSprite }) {
       bloecke.push(b);
     }
     scene.add(gruppe);
+    gruben.setze(lot, def.grube ? { rect: def.grube, tiefe: def.tiefe } : null);
     // kleiner parkplatz vor dem haus (legacy-größe)
     const platz = new THREE.Group();
     const p = kleinerPlatz(lot);
@@ -268,10 +283,11 @@ export function erzeugeHaeuser({ scene, world, RAPIER, mat, textSprite }) {
       platz.add(l);
     }
     scene.add(platz);
-    return { v, gruppe, cols, bloecke, platz, basis, truhePos, hash: "", besitzer: 0 };
+    return { v, lot, leitern, gruppe, cols, bloecke, platz, basis, truhePos, hash: "", besitzer: 0 };
   }
 
   function entferne(h) {
+    gruben.setze(h.lot, null);
     for (const c of h.cols) try { world.removeCollider(c, true); } catch {}
     for (const b of h.bloecke) if (b.col) try { world.removeCollider(b.col, true); } catch {}
     for (const g of [h.gruppe, h.platz]) {
@@ -293,7 +309,7 @@ export function erzeugeHaeuser({ scene, world, RAPIER, mat, textSprite }) {
       const h = haeuser.get(Number(e[0]));
       if (h) { h.besitzer = e[2] ? 1 : 0; h.hash = typeof e[3] === "string" ? e[3] : ""; }
     }
-    schilder.forEach((sc, lot) => { sc.belegt.visible = haeuser.has(lot); sc.frei.visible = !haeuser.has(lot); });
+    for (const sc of schilder) { sc.belegt.visible = haeuser.has(sc.lot); sc.frei.visible = !haeuser.has(sc.lot); }
   }
 
   // das dokument eines selbstgebauten hauses (vom server): vorlage merken und das haus neu aufbauen, falls es steht oder schon erwartet wird
@@ -356,10 +372,12 @@ export function erzeugeHaeuser({ scene, world, RAPIER, mat, textSprite }) {
     for (const [lot, h] of haeuser) {
       for (const b of h.bloecke) if (b.typ !== "geheim") nimm(b.typ, lot, b.mitte, b);
       if (h.truhePos) nimm("truhe", lot, h.truhePos);
+      for (const l of h.leitern) nimm("leiter", lot, { x: l.x, y: Math.min(l.y1, Math.max(l.y0, pos.y)), z: l.z }, l);
       nimm("brief", lot, briefkastenPos(lot));
     }
     return best;
   }
 
-  return { setze, setzeDoc, aktualisiere, naechster, naechstesZiel, schalte, haus: lot => haeuser.get(lot), hat: lot => haeuser.has(lot), anzahl: () => haeuser.size, haeuser };
+  const alleLeitern = () => { const aus = []; for (const h of haeuser.values()) aus.push(...h.leitern); return aus; };
+  return { alleLeitern, setze, setzeDoc, aktualisiere, naechster, naechstesZiel, schalte, haus: lot => haeuser.get(lot), hat: lot => haeuser.has(lot), anzahl: () => haeuser.size, haeuser };
 }

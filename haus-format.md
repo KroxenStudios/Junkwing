@@ -6,7 +6,7 @@ Ein Beispiel steht in `beispiel.bkhaus.json`.
 
 ## Maße
 Alles in **Blöcken zu 0,5 m**. Das Haus steht in der Mitte des Grundstücks. Raster: `x` 0 … masse[0]-1, `z` 0 … masse[1]-1, `y` 0 … masse[2]-1.
-Grenzen: 26 × 20 × 12 Blöcke (13 × 10 × 6 m), höchstens 700 Quader, 9000 Blöcke, 16 Materialien, 40 Teile, 100 Objekte, Datei bis 60 000 Zeichen.
+Grenzen: 80 × 80 × 100 Blöcke (40 × 40 × 50 m), höchstens 2500 Quader, 60 000 Blöcke, 16 Materialien, 40 Teile, 100 Objekte, Datei bis 200 000 Zeichen.
 
 ## Felder
 | Feld | Bedeutung |
@@ -14,8 +14,10 @@ Grenzen: 26 × 20 × 12 Blöcke (13 × 10 × 6 m), höchstens 700 Quader, 9000 B
 | `format`, `v` | immer `"junkwing-haus"` und `1` |
 | `name` | Anzeigename, höchstens 30 Zeichen |
 | `masse` | `[breite x, tiefe z, höhe y]` in Blöcken |
+| `keller` | so viele der untersten Ebenen (`y` 0 bis keller-1) liegen unter dem Boden, 0 = kein Keller, höchstens 8 (4 m). Der Boden liegt bei `y = keller`. Im Spiel wird dafür eine Grube in die Wohngegend geschnitten |
 | `material` | `[{ "id": 1, "farbe": "#e8dfd0", "textur": "putz" }, …]`; Blöcke verweisen nur auf die `id`, ändert man ein Material, ändert sich jeder Block damit |
-| `boden` | Material-ID einer 4-cm-Bodenplatte über der Grundfläche der Blöcke, `0` = keine |
+| `boden` | Standardmaterial des Fußbodens im Editor (der Boden selbst steht in `fussboden`) |
+| `fussboden` | Fußboden **nur dort, wo er gesetzt wurde** (Editor: Werkzeug „Fußboden“): `[x0, y0, z0, x1, y1, z1, material]`, je Zelle eine feste 8-cm-Platte unten in der Zelle. Fehlt das Feld in einer alten Datei, wird der alte Boden über die Grundfläche der Blöcke daraus gemacht |
 | `quader` | die **sichtbare Wand**: `[x0, y0, z0, x1, y1, z1, material]`, Ende exklusiv. Kanonisch: gleiche Blöcke ergeben immer dieselbe Liste |
 | `hitbox` | die **feste Kollision**, getrennt von der Wand (siehe unten) |
 | `teile` | Türen, Klappen, Geheimwände |
@@ -46,7 +48,9 @@ Die Öffnungen von Türen, Klappen und Geheimwänden gelten immer für beide Lis
 ```json
 { "a": "sofa", "x": 6.5, "y": 0, "z": 4, "r": 0 }
 ```
-`a` ist ein Asset (`sofa`, `tisch`, `stuhl`, `bett`, `regal`, `herd`, `schreibtisch`, `lampe`, `pflanze`, `truhe`, `esstisch`, `kommode`, `kuehlschrank`, `kamin`, `klavier`, `wanne`, `schrank`, `fernseher`, `bild`, `teppich`).
+`a` ist ein Asset (`sofa`, `tisch`, `stuhl`, `bett`, `regal`, `herd`, `schreibtisch`, `lampe`, `pflanze`, `truhe`, `esstisch`, `kommode`, `kuehlschrank`, `kamin`, `klavier`, `wanne`, `schrank`, `fernseher`, `bild`, `teppich`, `leiter`).
+
+**Leiter**: `{ "a": "leiter", "x": 3, "y": 0, "z": 2, "r": 0, "n": 8 }` – `n` ist die Länge in Blöcken (1 bis 100). Die Schienen stehen hinten an der Wand, man steht vorn (die Richtung von `r`). Im Spiel: E an der Leiter (oder W/S davor) klettert hoch, ganz oben steigt man automatisch nach vorn auf den Boden ab; Leertaste springt ab.
 `x`, `z` in Blöcken (halbe Schritte), `y` in Blöcken über dem Boden, `r` Drehung in 90°-Schritten. Die **erste `truhe`** ist die Kiste des Hauses (Gegenstände ablegen).
 
 ## Wie ein Haus ins Spiel kommt

@@ -71,6 +71,10 @@ export function startMenue({ L, konto, aktionen, bereit = true }) {
     [L("Hilfe", "Help"), () => aktionen.hilfe(), ""]
   ];
   for (const [t, f, k] of eintraege) liste.append(knopf(t, f, k));
+  // der welt-editor gehört dem konto kroxenstudios: der knopf erscheint nur dort (beim öffnen des menüs geprüft)
+  const weltKnopf = knopf(L("Welt-Editor", "World editor"), () => aktionen.weltEditor?.(), "");
+  weltKnopf.hidden = true;
+  liste.insertBefore(weltKnopf, liste.children[liste.children.length - 2]);
 
   function oeffne() {
     if (offen) return;
@@ -80,6 +84,7 @@ export function startMenue({ L, konto, aktionen, bereit = true }) {
     document.body.classList.add("menue");
     // einblenden: erst im nächsten bild, damit die übergänge laufen
     requestAnimationFrame(() => { tint.classList.add("an"); wurzel.classList.add("an"); });
+    weltKnopf.hidden = !aktionen.istAdmin?.();
     aktionen.beimOeffnen?.();
     if (!konto.angemeldet() && !gefragt()) zeigeFrage();
   }

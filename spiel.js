@@ -25,12 +25,15 @@ import { messeSensoren, animiereSensoren, erzeugeSensorHud } from "./sensorik.js
 import { richtMotoren, richtTasten } from "./zielen.js";
 import { erzeugeRunde } from "./kampfrunde.js";
 import { startHilfe } from "./hilfe.js";
-import { erzeugeHaeuser, kleinerPlatz, hausPos, KLEIN_K, VARIANTEN as HAUS_DEFS, EIGEN as HAUS_EIGEN } from "./haus.js";
+import { setzePlaetze, plaetzeListe, lotIds, erzeugeHaeuser, kleinerPlatz, hausPos, KLEIN_K, VARIANTEN as HAUS_DEFS, EIGEN as HAUS_EIGEN } from "./haus.js";
 import * as HE from "./hauseditor.js";
 import { bereinigeHaus, defAusDoc } from "./hausformat.js";
 import { erzeugeHausWahl } from "./hauswahl.js";
 import { baueWohngegend, flacheWohngegendAb, aufWohngegend } from "./wohngegend.js";
 import { startMenue } from "./menue.js";
+import { bereinigeWelt } from "./weltplatz.js";
+import { ebneGrundstuecke, baueGrundstuecke, baueWeltAssets } from "./grundstuecke.js";
+import { erzeugeWeltEditor } from "./welteditor.js";
 import { Behaelter, erzeugeInventarUi, hash53, neuerCode } from "./inventar.js";
 
 const $ = s => document.querySelector(s);
@@ -536,7 +539,8 @@ function baueWelt() {
   scene.add(raster);
 
   if (WELTDATEN) {
-    flacheWohngegendAb(WELTDATEN);   // eigene, ebene fläche für die wohngegend, weit weg vom flughafen (vor dem gelände)
+    if (PLAETZE) { ebneGrundstuecke(WELTDATEN, PLAETZE); setzePlaetze(PLAETZE); }   // jedes grundstück eingeebnet (vor dem gelände)
+    else flacheWohngegendAb(WELTDATEN);   // eigene, ebene fläche für die wohngegend, weit weg vom flughafen (vor dem gelände)
     baueGelaende({ d: WELTDATEN, RAPIER, world, scene, box: statischeBox });
   } else {
   const wt = wiesenTextur();
@@ -712,6 +716,13 @@ function baueWelt() {
 }
 
 const WELTDATEN = await ladeWeltDaten("welt.json");
+// grundstücke und assets aus dem welt-editor (konten-server); ohne sie oder ohne gelände gilt die alte reihe aus 20 grundstücken
+let WELT = null;
+try {
+  const r = await Promise.race([Konto.anfrage("GET", "/world"), new Promise(res => setTimeout(() => res(null), 3500))]);
+  WELT = bereinigeWelt(r?.welt);
+} catch {}
+const PLAETZE = WELT?.plaetze.length && WELTDATEN ? WELT.plaetze : null;
 const gebauteKarten = [];
 const bodenHoehe = (x, z) => {
   for (const k of gebauteKarten) {
@@ -753,8 +764,30 @@ try {
   const g = parseInt(localStorage.getItem(HAUS_KEY), 10);
   if ((g >= 0 && g < HAUS_DEFS.length) || (g === HAUS_EIGEN && meinHausDoc)) hausWahlV = g;
 } catch {}
+// haus-presets: der ordner haeuser/ im spielordner. index.json listet die dateien (*.bkhaus.json); haeuser/index-erzeugen.mjs schreibt sie neu
+async function ladePresets() {
+  try {
+    const r = await fetch("haeuser/index.json", { cache: "no-cache" });
+    if (!r.ok) return [];
+    const namen = await r.json();
+    const aus = [];
+    for (const datei of (Array.isArray(namen) ? namen : []).slice(0, 60)) {
+      if (typeof datei !== "string" || !/^[\w\-. äöüÄÖÜß]+\.bkhaus\.json$/.test(datei)) continue;
+      try {
+        const rr = await fetch("haeuser/" + encodeURIComponent(datei), { cache: "no-cache" });
+        const doc = rr.ok ? bereinigeHaus(await rr.text()) : null;
+        if (doc) aus.push({ name: doc.name, doc });
+      } catch {}
+    }
+    return aus;
+  } catch { return []; }
+}
 const HAUSWAHL = erzeugeHausWahl({
   L: (de, en) => (window.WG ? WG.L(de, en) : de),
+  plaetze: () => (plaetzeListe() || []).map(p => ({ lot: p.id, b: p.b, t: p.t, frei: !HAEUSER.hat(p.id), meins: p.id === meinLot })),
+  waehleLot: lot => { if (socket?.readyState === WebSocket.OPEN) socket.send(JSON.stringify({ type: "waehleLot", lot })); },
+  presets: ladePresets,
+  waehlePreset: doc => setzeEigenesHaus(doc),
   en: () => window.WG?.lang === "en",
   varianten: HAUS_DEFS,
   aktuell: () => hausWahlV,
@@ -786,7 +819,7 @@ function oeffneHausEditor(doc = null) {
   if (modus === "fahr") wechsleModus();
   HAUSWAHL.schliesse();
   INV_UI.schliesse();
-  hausEditor ||= HE.erzeugeHausEditor({ renderer, schnittstelle: { zu: () => {}, verwenden: d => setzeEigenesHaus(d) } });
+  hausEditor ||= HE.erzeugeHausEditor({ renderer, schnittstelle: { zu: () => {}, verwenden: d => setzeEigenesHaus(d), hauptmenue: () => oeffneHauptmenue() } });
   hausEditor.oeffne(doc || meinHausDoc || null);
 }
 
@@ -867,6 +900,13 @@ function interagiere() {
   if (z.art === "tuer") {
     if (z.block.ziel === 0 && !z.block.innen && !hatHausSchluessel(z.lot)) return meldung("Abgeschlossen – dir fehlt der Hausschlüssel");
     HAEUSER.schalte(z.block);
+  } else if (z.art === "leiter") {
+    // aufsteigen: an die leiter heranrücken (vorderseite), dann geht es mit w / s weiter
+    const l = z.block, t = fussRb.translation();
+    fussRb.setTranslation({ x: l.x + l.ex * 0.2, y: Math.max(t.y, l.y0 + FUSS_H + 0.05), z: l.z + l.ez * 0.2 }, true);
+    fussRb.setLinvel({ x: 0, y: 0, z: 0 }, true);
+    fussKlettert = true;
+    fussSprungSperre = 0;
   } else if (z.art === "klappe") {
     HAEUSER.schalte(z.block);
   } else {
@@ -875,7 +915,9 @@ function interagiere() {
 }
 
 // wohngegend mit straße, gärten, hecken, laternen und nachbarhäusern (wohngegend.js)
-baueWohngegend({ scene, world, RAPIER, mat });
+if (PLAETZE) baueGrundstuecke({ scene, world, RAPIER, mat, plaetze: PLAETZE });
+else baueWohngegend({ scene, world, RAPIER, mat });
+let weltAssetGruppe = WELT?.assets.length ? baueWeltAssets(scene, WELT.assets, bodenHoehe) : null;
 
 // ort des fahrzeugs: haus (standard: kleiner parkplatz vor dem eigenen haus in der wohngegend), parkplatz (der große auf
 // dem flugplatz) oder hafen. der knopf im baupanel wechselt den ort; gebaut wird dort, wo auch gestartet wird
@@ -2544,7 +2586,14 @@ function leiterNah(t) {
       if (Math.hypot(c.x - t.x, c.z - t.z) < 0.55 && Math.abs(c.y - t.y) < 0.5) return true;
     }
   }
-  return false;
+  return hausLeiterNah(t) !== null;
+}
+// leitern in häusern (aus dem haus-editor): eine zone von unterkante bis oberkante. rückgabe die zone oder null
+function hausLeiterNah(t) {
+  for (const l of HAEUSER.alleLeitern()) {
+    if (Math.hypot(l.x - t.x, l.z - t.z) < 0.55 && t.y - FUSS_H > l.y0 - 0.4 && t.y - FUSS_H < l.y1 + 0.1) return l;
+  }
+  return null;
 }
 
 function steuereFuss() {
@@ -2569,6 +2618,18 @@ function steuereFuss() {
   const hoch = (k.has("w") || k.has("arrowup")) ? 1 : 0;
   const runter = (k.has("s") || k.has("arrowdown")) ? 1 : 0;
   if (nahLeiter && (hoch || runter) && performance.now() > fussSprungSperre) fussKlettert = true;
+  // leiter im haus: oben angekommen steigt man automatisch ab (ein stück nach vorn, auf den boden darüber)
+  if (fussKlettert) {
+    const hl = hausLeiterNah(t0);
+    if (hl && t0.y - FUSS_H >= hl.y1 - 0.05) {
+      fussRb.setTranslation({ x: hl.x + hl.ex * 0.7, y: hl.y1 + FUSS_H + 0.12, z: hl.z + hl.ez * 0.7 }, true);
+      fussRb.setLinvel({ x: hl.ex * 1.5, y: 0, z: hl.ez * 1.5 }, true);
+      fussRb.setGravityScale(PH.gravFaktor(hl.y1), true);
+      fussKlettert = false;
+      fussSprungSperre = performance.now() + 600;
+      return;
+    }
+  }
   if (!nahLeiter || angetippt.has("space")) {
     if (fussKlettert && angetippt.has("space")) {
       vy = 5;
@@ -4306,7 +4367,7 @@ function empfange(m) {
     }
     case "schluessel":   // der server gibt dem besitzer den code seines hauses: das ist sein hausschlüssel
       if (m.art === "haus" && typeof m.code === "string" && m.code) {
-        INV.setzeHausschluessel(Math.max(0, Math.min(19, Number(m.lot) || 0)), m.code.replace(/[^a-z0-9]/g, "").slice(0, 16));
+        INV.setzeHausschluessel(Math.max(0, Math.min(39, Number(m.lot) || 0)), m.code.replace(/[^a-z0-9]/g, "").slice(0, 16));
         meldung("Hausschlüssel im Inventar");
       }
       break;
@@ -4315,13 +4376,13 @@ function empfange(m) {
       break;
     case "hausDoc": {   // das dokument eines selbstgebauten hauses (der server hat es geprüft, wir prüfen noch einmal)
       const d = bereinigeHaus(m.doc);
-      if (d) HAEUSER.setzeDoc(Math.max(0, Math.min(19, Number(m.lot) || 0)), d);
+      if (d) HAEUSER.setzeDoc(Math.max(0, Math.min(39, Number(m.lot) || 0)), d);
       break;
     }
     case "hausDocs":
       for (const e of Array.isArray(m.docs) ? m.docs : []) {
         const d = bereinigeHaus(e?.doc);
-        if (d) HAEUSER.setzeDoc(Math.max(0, Math.min(19, Number(e.lot) || 0)), d);
+        if (d) HAEUSER.setzeDoc(Math.max(0, Math.min(39, Number(e.lot) || 0)), d);
       }
       break;
     case "plans":
@@ -4865,6 +4926,11 @@ function schleife(zeit) {
     kartenEditor.frame(dt);
     return;
   }
+  if (weltEditor?.aktiv()) {   // dev-kamera: der editor setzt die kamera, die welt wird normal gezeichnet
+    weltEditor.frame(dt);
+    renderer.render(scene, camera);
+    return;
+  }
 
   bewegeAndere(zeit, dt);
 
@@ -4927,7 +4993,7 @@ function schleife(zeit) {
     if (hausKnopf.hidden === !!nah) hausKnopf.hidden = !nah;
     if (nah) {
       const text = nah.art === "tuer" ? (nah.block.ziel ? "Tür schließen (E)" : nah.block.innen ? "Innentür öffnen (E)" : hatHausSchluessel(nah.lot) ? "Tür aufschließen (E)" : "Tür: abgeschlossen")
-        : nah.art === "klappe" ? "Klappe öffnen / schließen (E)" : nah.art === "truhe" ? "Truhe öffnen (E)" : "Briefkasten öffnen (E)";
+        : nah.art === "leiter" ? "Leiter besteigen (E)" : nah.art === "klappe" ? "Klappe öffnen / schließen (E)" : nah.art === "truhe" ? "Truhe öffnen (E)" : "Briefkasten öffnen (E)";
       if (hausKnopf.dataset.t !== text) { hausKnopf.dataset.t = text; hausKnopf.textContent = tr(text); }
     }
     if (!nah && INV_UI.kisteOffen()) INV_UI.schliesse();   // zu weit von der truhe weg
@@ -5205,12 +5271,54 @@ const MENUE = startMenue({
     hangar: () => document.getElementById("modelleBtn")?.click(),
     haus: () => HAUSWAHL.oeffne(),
     hausBauen: () => oeffneHausEditor(),
+    istAdmin: () => Konto.istAdmin(),
+    weltEditor: () => oeffneWeltEditor(),
     konto: () => $("#kontoBtn")?.click(),
     hilfe: () => HILFE.oeffne(),
     beimSchliessen: () => { bauKamera.yaw = 0.75; bauKamera.pitch = 0.55; setzeBauZiel(); baueBauansicht(); }
   }
 });
 window.addEventListener("krox-stand", () => MENUE.aktualisiereLogin());
+// esc führt ins hauptmenü, wenn es sonst nichts zu schließen gibt: ein offenes panel (einstellungen, hausauswahl, kiste, dialog) schließt sich selbst,
+// danach hat sich der stand geändert und das menü bleibt zu. die editoren behandeln esc selbst (abbrechen, sonst schließen sie sich und rufen das menü)
+// welt-editor (nur das admin-konto): fliegende dev-kamera in der echten welt, grundstücke und assets setzen, speichern auf dem konten-server
+let weltEditor = null;
+function oeffneWeltEditor() {
+  if (!Konto.istAdmin()) return meldung("Nur das Konto KroxenStudios darf die Welt bearbeiten");
+  if (!WELTDATEN) return meldung("Ohne Gelände (welt.json) gibt es keinen Welt-Editor");
+  if (modus === "fahr") wechsleModus();
+  MENUE.schliesse();
+  $("#hud").hidden = true;
+  weltEditor ||= erzeugeWeltEditor({
+    scene, camera, renderer,
+    schnittstelle: {
+      hoehe: (x, z) => bodenHoehe(x, z),
+      start: () => { const p = hausPos(meinLot); return { x: p.x, y: p.y, z: p.z }; },
+      speichern: async w => { await Konto.anfrage("PUT", "/admin/world", { data: w }); },
+      baueAssets: assets => {
+        if (weltAssetGruppe) scene.remove(weltAssetGruppe);
+        weltAssetGruppe = assets.length ? baueWeltAssets(scene, assets, bodenHoehe) : null;
+        return weltAssetGruppe;
+      },
+      hauptmenue: () => oeffneHauptmenue()
+    }
+  });
+  weltEditor.oeffne(WELT);
+}
+function oeffneHauptmenue() {
+  weltEditor?.schliesse();
+  hausEditor?.schliesse();
+  kartenEditor?.schliesse();
+  $("#hud").hidden = true;
+  MENUE.oeffne();
+}
+addEventListener("keydown", e => {
+  if (e.key !== "Escape" || e.repeat || tippt()) return;
+  if (e.target?.closest?.("input, textarea, select")) return;
+  const stand = () => [MENUE.offen(), !$("#hud").hidden, HAUSWAHL.offen(), hausEditor?.aktiv(), kartenEditor?.aktiv(), weltEditor?.aktiv(), INV_UI.kisteOffen(), !!document.querySelector("[role=dialog].an")].join();
+  const vorher = stand();
+  setTimeout(() => { if (stand() === vorher && !MENUE.offen() && !hausEditor?.aktiv() && !kartenEditor?.aktiv() && !weltEditor?.aktiv()) oeffneHauptmenue(); }, 0);
+}, true);
 {
   const b = document.createElement("button");
   b.type = "button";
@@ -5228,6 +5336,9 @@ function menueKamera(zeit) {
   bauKamera.yaw = MENUE.schwank(zeit / 1000);
 }
 requestAnimationFrame(schleife);
+
+// der download-hinweis ist nur fuer die web-version gedacht
+if (window.JUNKWING_DESKTOP) document.getElementById("appLink")?.remove();
 
 if (/^https?:$/.test(location.protocol) && !["localhost", "127.0.0.1"].includes(location.hostname)) {
   const pixel = new Image();
