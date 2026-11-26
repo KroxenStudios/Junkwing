@@ -115,7 +115,7 @@ export async function zeigeProfil(container, name, opts = {}) {
     sicherheit.push(el("button", { type: "button", textContent: L("Melden", "Report"), onclick: () => oeffneMelden({ kind: "user", name: p.username }) }));
     if (p.bio) sicherheit.push(el("button", { type: "button", class: "link", textContent: L("Bio melden", "Report bio"), onclick: () => oeffneMelden({ kind: "bio", name: p.username }) }));
   }
-  if (Konto.istAdmin() && f !== "self") sicherheit.push(el("a", { class: "kontoSeite", href: `moderation.html?u=${encodeURIComponent(p.username)}`, textContent: L("Moderation →", "Moderation →") }));
+  if (Konto.istAdmin() && f !== "self") sicherheit.push(el("a", { class: "kontoSeite", href: `${Konto.basis}/moderation/?u=${encodeURIComponent(p.username)}`, target: "_blank", rel: "noopener", textContent: L("Moderation →", "Moderation →") }));
 
   const liste = el("ul", { class: "modellListe" });
   if (!p.models.length) liste.append(el("li", { class: "leer", textContent: L("Noch keine veröffentlichten Fahrzeuge.", "No published vehicles yet.") }));

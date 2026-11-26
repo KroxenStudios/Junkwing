@@ -31,6 +31,9 @@ import { bereinigeHaus, defAusDoc } from "./hausformat.js";
 import { erzeugeHausWahl } from "./hauswahl.js";
 import { baueWohngegend, flacheWohngegendAb, aufWohngegend } from "./wohngegend.js";
 import { startMenue } from "./menue.js";
+import { startEntwickler } from "./entwickler.js";
+import { startPopups, pruefeNachricht } from "./popups.js";
+import { startWerbung } from "./werbung.js";
 import { bereinigeWelt } from "./weltplatz.js";
 import { ebneGrundstuecke, baueGrundstuecke, baueWeltAssets } from "./grundstuecke.js";
 import { erzeugeWeltEditor } from "./welteditor.js";
@@ -4292,6 +4295,7 @@ function oeffneSpielerProfil(konto) {
   addEventListener("pointerdown", e => { if (l && !l.hidden && !l.contains(e.target) && e.target !== z) l.hidden = true; });
 }
 
+let getrenntSeit = 0;
 async function verbinde() {
   if (!socket && !params.has("offline")) await freienRaumWaehlen();
   if (params.has("offline")) {
@@ -4310,6 +4314,12 @@ async function verbinde() {
   const sock = socket;
   sock.addEventListener("open", async () => {
     wiederverbinden = 0;
+    if (getrenntSeit) setTimeout(() => {
+      if (sock.readyState !== WebSocket.OPEN || !getrenntSeit) return;
+      const lange = Date.now() - getrenntSeit > 20000;
+      getrenntSeit = 0;
+      pruefeNachricht(lange);
+    }, 2500);
     statusEl.textContent = tr("Online");
     statusEl.dataset.state = "online";
     zeigeSpielerZahl();
@@ -4337,6 +4347,7 @@ async function verbinde() {
       verbinde();
       return;
     }
+    getrenntSeit ||= Date.now();
     statusEl.textContent = tr("Offline – du kannst trotzdem bauen und fahren");
     statusEl.dataset.state = "offline";
     wartet = false;
@@ -5223,6 +5234,13 @@ baueBauansicht();
 aktualisiereSchilder();
 verbinde();
 Konto.start({ getPlan: () => BAU.kompakt(plan), setPlan: planAusKonto, paketWarnung });
+startPopups();
+startWerbung();
+startEntwickler({
+  hud: $("#hud"),
+  bild: () => { renderer.render(scene, camera); return renderer.domElement; },
+  kontext: () => `${location.pathname} ${innerWidth}x${innerHeight} ${EN ? "en" : "de"} ${navigator.userAgent.slice(0, 120)}`
+});
 {
   let geprueft = false;
   const pruefen = () => {

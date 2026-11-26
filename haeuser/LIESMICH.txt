@@ -1,0 +1,5 @@
+Haus-Presets
+============
+Lege hier Häuser aus dem Haus-Editor (Export -> *.bkhaus.json) ab. Danach index-erzeugen.cmd ausführen (schreibt index.json neu).
+Im Spiel erscheinen sie unter Hauptmenü -> "Haus wählen" -> "Haus-Presets"; ein Klick stellt das Preset als dein Haus ein.
+Die Dateien werden beim Laden bereinigt (wie jedes Haus); kaputte Dateien werden übersprungen.

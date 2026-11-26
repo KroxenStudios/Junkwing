@@ -1,4 +1,5 @@
 import { Konto } from "./accounts.js";
+import { merkeAusfall } from "./popups.js";
 
 const WORKER_HOST = "bastelkarre-online.kroxenstudios.workers.dev";
 const EN = !!window.WG && window.WG.lang === "en";
@@ -52,6 +53,7 @@ function zeigeSperre(text) {
 
 const sperre = await pruefe();
 if (sperre !== null) {
+  merkeAusfall();
   zeigeSperre(sperre);
   await new Promise(() => {});
 }

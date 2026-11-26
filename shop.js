@@ -1,4 +1,5 @@
 import { Konto } from "./accounts.js";
+import { einladungsLink } from "./werbung.js";
 import { PAKET_TEILE, TEILE } from "./bau.js";
 
 const L = (de, en) => (window.WG ? WG.L(de, en) : de);
@@ -74,15 +75,6 @@ async function kaufen(p) {
   }
 }
 
-function einladungsLink() {
-  // in der desktop-app (junkwing://) zeigt der link auf die oeffentliche web-version
-  const u = new URL(location.protocol === "junkwing:" ? "https://kroxenstudios.github.io/WaitingGames/MultiplayerRoom/" : location.href);
-  u.search = "";
-  u.hash = "";
-  u.searchParams.set("ref", daten.ref.code);
-  return u.toString();
-}
-
 const TEIL_EN = { lidar: "Lidar dome", radar: "Tracking radar", gyro: "Gyro sphere", hoehe: "Radar altimeter", kraft: "G-force crystal",
   unterboden: "Underglow", strahler: "Floodlight", blinker: "Hazard blinker", blaulicht: "Beacon", laser: "Laser beam",
   funken: "Spark trail", regenbogen: "Rainbow exhaust", staubspur: "Dust plume", plasma: "Plasma trail", konfetti: "Confetti cannon",
@@ -132,12 +124,12 @@ function pakete() {
 }
 
 function einladung() {
-  const link = el("input", { type: "text", readOnly: true, value: einladungsLink() });
+  const link = el("input", { type: "text", readOnly: true, value: einladungsLink(daten.ref.code) });
   return el("div", { class: "shopKarte" },
     el("h3", { textContent: L("Freunde einladen", "Invite friends") }),
     el("small", { textContent: L(
-      `Für jeden geworbenen Spieler, der ein eigenes Konto anlegt und ${daten.ref.days} Tage in Folge online ist, bekommst du ${daten.ref.reward} Coins (höchstens 20 Einladungen). Teile diesen Link:`,
-      `For every player you bring in who creates an account and is online ${daten.ref.days} days in a row you get ${daten.ref.reward} coins (up to 20 invitations). Share this link:`) }),
+      `Für jeden geworbenen Spieler, der ein eigenes Konto anlegt und ${daten.ref.days} Tage in Folge online ist, bekommst du ${daten.ref.reward} Coins (höchstens 20 Einladungen). Dein Code: ${daten.ref.code}. Teile ihn oder diesen Link:`,
+      `For every player you bring in who creates an account and is online ${daten.ref.days} days in a row you get ${daten.ref.reward} coins (up to 20 invitations). Your code: ${daten.ref.code}. Share it or this link:`) }),
     el("div", { class: "shopLink" }, link,
       el("button", { type: "button", textContent: L("Kopieren", "Copy"), onclick: async e => {
         link.select();
@@ -149,12 +141,28 @@ function einladung() {
 function killKarte() {
   const an = !!killStand?.active;
   const text = el("input", { type: "text", maxLength: 300, value: killStand?.message || "", placeholder: L("Nachricht für Spieler (optional)", "Message for players (optional)") });
+  const danach = el("textarea", { maxLength: 500, rows: 3, value: killStand?.nachher?.text || "", placeholder: L("Popup nach dem Ausfall (leer = Standardtext)", "Popup after the outage (empty = default text)") });
+  const senden = async (active, neu) => {
+    killStand = await Konto.anfrage("POST", "/admin/kill", { active, message: text.value, nachher: danach.value, neu });
+  };
+  const veroeffentlichen = el("button", { type: "button", textContent: L("Popup veröffentlichen", "Publish popup"), onclick: async () => {
+    veroeffentlichen.disabled = true;
+    try {
+      await senden(an, true);
+      meldungText = !killStand.nachher ? L("Popup entfernt.", "Popup removed.") : an ? L("Gespeichert. Das Popup erscheint, sobald der Server wieder läuft.", "Saved. The popup appears once the server is running again.") : L("Popup ist live. Jeder Spieler sieht es einmal, 7 Tage lang.", "Popup is live. Each player sees it once, for 7 days.");
+      meldungArt = "ok";
+      zeige();
+    } catch (e) {
+      veroeffentlichen.disabled = false;
+      melde(Konto.fehlerText(e.message), "fehler");
+    }
+  } });
   const knopf = el("button", { type: "button", textContent: an ? L("Server wieder einschalten", "Switch server back on") : L("Server abschalten", "Switch server off"), onclick: async () => {
     const ziel = !an;
     if (ziel && !confirm(L("Server wirklich abschalten? Das Spiel startet dann für alle ausser dir nicht mehr, laufende Verbindungen werden getrennt.", "Really switch the server off? The game will no longer start for anyone but you, and running connections are cut."))) return;
     knopf.disabled = true;
     try {
-      killStand = await Konto.anfrage("POST", "/admin/kill", { active: ziel, message: text.value });
+      await senden(ziel, false);
       meldungText = ziel ? L("Kill-Switch aktiv: Das Spiel startet nicht mehr (ausser für dich). Wirkt nach wenigen Sekunden.", "Kill switch active: the game no longer starts (except for you). Takes effect within seconds.") : L("Kill-Switch aus: Das Spiel läuft wieder.", "Kill switch off: the game is running again.");
       meldungArt = "ok";
       zeige();
@@ -166,7 +174,8 @@ function killKarte() {
   return el("div", { class: "shopKarte" },
     el("h3", { textContent: "Kill-Switch" }),
     el("small", { textContent: an ? L("AKTIV: Das Spiel ist für alle ausser dir gesperrt.", "ACTIVE: the game is locked for everyone but you.") : L("Aus: Das Spiel läuft normal.", "Off: the game runs normally.") }),
-    el("div", { class: "shopForm" }, text, knopf));
+    el("div", { class: "shopForm" }, text, knopf),
+    el("div", { class: "shopForm" }, danach, veroeffentlichen));
 }
 
 function adminWerkzeug() {

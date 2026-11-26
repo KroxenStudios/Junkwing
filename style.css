@@ -1097,3 +1097,26 @@ body.menue #invRad, body.karteneditor #invRad { display: none; }
 /* der haus-editor liegt über dem spiel: menü, inventar und knöpfe der szene ruhen */
 body.hauseditor #hauptmenue, body.hauseditor #menueTint, body.hauseditor #invRad, body.hauseditor .hausKnopf, body.hauseditor #hausWahl, body.hauseditor #anmeldeFrage { display: none !important; }
 #hausWahl .hwFuss { display: flex; gap: 8px; justify-content: flex-end; flex-wrap: wrap; }
+
+#hud #devBtn { height: 28px; padding: 0 10px; border: 0; border-radius: 7px; background: none; color: var(--accent); font-size: 12px; }
+#hud #devBtn:hover:not(:disabled) { background: #ffffff12; }
+#hud #devBtn:disabled { color: var(--muted); cursor: default; }
+#hud #devBtn[hidden], #raiBtn[hidden] { display: none; }
+#raiBtn { position: fixed; left: 10px; bottom: 10px; z-index: 20; height: 22px; padding: 0 7px; border: 1px solid var(--line); border-radius: 6px; background: var(--panel); color: var(--muted); font-size: 10px; letter-spacing: 0.08em; opacity: 0.38; transition: opacity 0.2s; }
+#raiBtn:hover, #raiBtn:focus-visible { opacity: 1; color: var(--text); }
+body.menue #raiBtn { display: none; }
+.raiVorschau { width: 100%; max-height: 180px; object-fit: contain; border-radius: 8px; background: #000; }
+.raiHaken { font-size: 13px; color: var(--muted); }
+
+.jwPopup { position: fixed; top: 64px; left: 50%; translate: -50% 0; z-index: 9500; width: min(380px, calc(100vw - 24px)); display: grid; gap: 8px; padding: 14px 16px; border: 1px solid var(--line); border-radius: 12px; background: var(--panel-solid); color: var(--text); box-shadow: 0 12px 40px #0008; animation: jwRein 0.25s ease; }
+.jwPopup h2 { margin: 0; font-size: 15px; }
+.jwPopup p { margin: 0; font-size: 13px; line-height: 1.5; color: var(--muted); overflow-wrap: anywhere; }
+.jwPopup button { justify-self: end; padding: 6px 16px; border: 0; border-radius: 7px; background: #ffffff14; color: var(--text); cursor: pointer; }
+.jwPopup button:hover { background: #ffffff26; }
+.jwPopup a { color: var(--accent); font-size: 13px; }
+.jwPopup label { display: grid; grid-template-columns: 36px 1fr auto; gap: 8px; align-items: center; font-size: 12px; color: var(--muted); }
+.jwPopup input { min-width: 0; padding: 5px 8px; border: 1px solid var(--line); border-radius: 6px; background: #0004; color: var(--text); font: 12px ui-monospace, monospace; }
+.jwPopup label button { padding: 5px 10px; }
+.jwPopup button.leise { justify-self: start; padding: 0; background: none; color: var(--muted); font-size: 12px; text-decoration: underline; }
+@keyframes jwRein { from { opacity: 0; transform: translateY(-8px); } }
+@media (prefers-reduced-motion: reduce) { .jwPopup { animation: none; } }

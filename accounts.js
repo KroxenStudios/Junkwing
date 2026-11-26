@@ -42,6 +42,9 @@ const FEHLER = {
   zu_viele_anfragen: ["Du hast schon 20 offene Anfragen.", "You already have 20 open requests."],
   eigenes_modell: ["Eigene Fahrzeuge kannst du nicht bewerten.", "You cannot rate your own vehicles."],
   nicht_verfuegbar: ["Gerade nicht verfügbar.", "Not available right now."],
+  text_kurz: ["Bitte etwas mehr schreiben.", "Please write a bit more."],
+  kein_entwickler: ["Kein aktiver Entwicklerzugang.", "No active developer access."],
+  bild_ungueltig: ["Der Screenshot ist ungültig oder zu groß.", "The screenshot is invalid or too large."],
   geschuetzt: ["Das Betreiber-Konto lässt sich hier nicht löschen.", "The operator account cannot be deleted here."],
   gesperrt: ["Dieses Konto wurde vom Moderator gesperrt.", "This account was suspended by a moderator."],
   blockiert: ["Du hast dieses Konto blockiert.", "You have blocked this account."],
@@ -184,13 +187,16 @@ async function ladeFreunde() {
 
 const angemeldet = () => !!store.get(TOKEN_KEY);
 
-const stand = { coins: null, owned: new Set(), streak: 0, streakShow: true, fx: { bg: "", tag: "" } };
+const stand = { coins: null, owned: new Set(), streak: 0, streakShow: true, fx: { bg: "", tag: "" }, dev: null, devOffen: 0, ref: null };
 function standSetzen(teil) {
   if (typeof teil.coins === "number") stand.coins = teil.coins;
   if (Array.isArray(teil.owned)) stand.owned = new Set(teil.owned);
   if (typeof teil.streak === "number") stand.streak = teil.streak;
   if (typeof teil.streakShow === "boolean") stand.streakShow = teil.streakShow;
   if (teil.fx && typeof teil.fx === "object") stand.fx = { bg: String(teil.fx.bg || ""), tag: String(teil.fx.tag || "") };
+  if (typeof teil.dev === "string") stand.dev = teil.dev;
+  if (teil.ref && typeof teil.ref === "object") stand.ref = teil.ref;
+  if (typeof teil.devOffen === "number") stand.devOffen = teil.devOffen;
   window.dispatchEvent(new Event("krox-stand"));
 }
 async function anmeldeTag() {
@@ -207,7 +213,7 @@ function abmelden(server = true) {
   garage = [];
   blockiertSet = new Set();
   freundeSet = new Set();
-  stand.coins = null; stand.owned = new Set(); stand.streak = 0; stand.fx = { bg: "", tag: "" };
+  stand.coins = null; stand.owned = new Set(); stand.streak = 0; stand.fx = { bg: "", tag: "" }; stand.dev = null; stand.devOffen = 0; stand.ref = null;
   window.dispatchEvent(new Event("krox-stand"));
   aktualisiereKnopf();
   if (dialog?.open) zeige();
@@ -244,7 +250,7 @@ async function abgleichen(frisch = false) {
     return false;
   }
   store.set(USER_KEY, me.username);
-  standSetzen({ coins: me.coins, owned: me.owned, streak: me.streak, streakShow: me.streakShow, fx: me.fx });
+  standSetzen({ coins: me.coins, owned: me.owned, streak: me.streak, streakShow: me.streakShow, fx: me.fx, dev: me.dev, devOffen: me.devOffen, ref: me.ref });
   meinProfil = { bio: me.bio || "", created: me.created || 0 };
   ladeFreunde();
   ladeBlockiert();
@@ -398,6 +404,11 @@ function zeigeFormular() {
     pw2 = el("input", { type: "password", autocomplete: "new-password", required: true, minLength: 8, placeholder: L("Passwort wiederholen", "Repeat password") });
     felder.push(pw2);
   }
+  let werber = null;
+  if (modus === "register") {
+    werber = el("input", { type: "text", name: "ref", autocomplete: "off", maxLength: 12, value: store.get(REF_KEY) || "", placeholder: L("Einladungscode (freiwillig)", "Invite code (optional)"), autocapitalize: "characters", spellcheck: false });
+    felder.push(werber);
+  }
   const absenden = el("button", { type: "submit", class: "primaer", textContent: titel });
   const form = el("form", {
     class: "kontoForm",
@@ -415,7 +426,7 @@ function zeigeFormular() {
           hinweis = "";
           if (await nachAnmeldung(d, true)) return;
         } else if (modus === "register") {
-          const d = await anfrage("POST", "/register", { username: u, key, ref: store.get(REF_KEY) || undefined }, null);
+          const d = await anfrage("POST", "/register", { username: u, key, ref: werber.value.trim() || undefined }, null);
           code = d.recovery;
           hinweis = "";
           await nachAnmeldung(d, false);
@@ -619,7 +630,7 @@ function zeigeKonto() {
     el("p", { class: "kontoInfo", textContent: L("Name, Farbe, Einstellungen und das zuletzt gebaute Fahrzeug werden automatisch synchronisiert.", "Name, colour, settings and your latest build sync automatically.") }),
     meldung(),
     seite ? "" : el("a", { class: "kontoSeite", href: "konto.html", textContent: L("Konto verwalten: Profil, Freunde, Fahrzeuge →", "Manage account: profile, friends, vehicles →") }),
-    (seite && store.get("krox-admin") === "1") ? el("a", { class: "kontoSeite", href: "moderation.html", textContent: L("Moderation öffnen →", "Open moderation →") }) : "",
+    (seite && store.get("krox-admin") === "1") ? el("a", { class: "kontoSeite", href: BASE + "/moderation/", target: "_blank", rel: "noopener", textContent: L("Moderation öffnen →", "Open moderation →") }) : "",
     ...(seite ? [profilBox(), freundeBox(), blockBox(), fahrzeugeBox()] : []),
     charakterBox(),
     streakBox(),
