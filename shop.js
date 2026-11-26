@@ -128,8 +128,8 @@ function einladung() {
   return el("div", { class: "shopKarte" },
     el("h3", { textContent: L("Freunde einladen", "Invite friends") }),
     el("small", { textContent: L(
-      `Für jeden geworbenen Spieler, der ein eigenes Konto anlegt und ${daten.ref.days} Tage in Folge online ist, bekommst du ${daten.ref.reward} Coins (höchstens 20 Einladungen). Dein Code: ${daten.ref.code}. Teile ihn oder diesen Link:`,
-      `For every player you bring in who creates an account and is online ${daten.ref.days} days in a row you get ${daten.ref.reward} coins (up to 20 invitations). Your code: ${daten.ref.code}. Share it or this link:`) }),
+      `Für jeden geworbenen Spieler, der ein eigenes Konto anlegt und ${daten.ref.days} Tage in Folge online ist, bekommst du ${daten.ref.reward} Coins (höchstens 20 Einladungen). Dein Einladungscode steckt im Link, das Konto muss darüber erstellt werden. Teile diesen Link:`,
+      `For every player you bring in who creates an account and is online ${daten.ref.days} days in a row you get ${daten.ref.reward} coins (up to 20 invitations). Your invite code is part of the link, the account has to be created through it. Share this link:`) }),
     el("div", { class: "shopLink" }, link,
       el("button", { type: "button", textContent: L("Kopieren", "Copy"), onclick: async e => {
         link.select();
@@ -141,9 +141,11 @@ function einladung() {
 function killKarte() {
   const an = !!killStand?.active;
   const text = el("input", { type: "text", maxLength: 300, value: killStand?.message || "", placeholder: L("Nachricht für Spieler (optional)", "Message for players (optional)") });
+  const textEn = el("input", { type: "text", maxLength: 300, value: killStand?.messageEn || "", placeholder: L("Nachricht für Spieler auf Englisch (optional)", "Message for players in English (optional)") });
+  const danachEn = el("textarea", { maxLength: 500, rows: 3, value: killStand?.nachher?.textEn || "", placeholder: L("Popup auf Englisch (leer = deutscher Text)", "Popup in English (empty = German text)") });
   const danach = el("textarea", { maxLength: 500, rows: 3, value: killStand?.nachher?.text || "", placeholder: L("Popup nach dem Ausfall (leer = Standardtext)", "Popup after the outage (empty = default text)") });
   const senden = async (active, neu) => {
-    killStand = await Konto.anfrage("POST", "/admin/kill", { active, message: text.value, nachher: danach.value, neu });
+    killStand = await Konto.anfrage("POST", "/admin/kill", { active, message: text.value, messageEn: textEn.value, nachher: danach.value, nachherEn: danachEn.value, neu });
   };
   const veroeffentlichen = el("button", { type: "button", textContent: L("Popup veröffentlichen", "Publish popup"), onclick: async () => {
     veroeffentlichen.disabled = true;
@@ -174,8 +176,8 @@ function killKarte() {
   return el("div", { class: "shopKarte" },
     el("h3", { textContent: "Kill-Switch" }),
     el("small", { textContent: an ? L("AKTIV: Das Spiel ist für alle ausser dir gesperrt.", "ACTIVE: the game is locked for everyone but you.") : L("Aus: Das Spiel läuft normal.", "Off: the game runs normally.") }),
-    el("div", { class: "shopForm" }, text, knopf),
-    el("div", { class: "shopForm" }, danach, veroeffentlichen));
+    el("div", { class: "shopForm" }, text, textEn, knopf),
+    el("div", { class: "shopForm" }, danach, danachEn, veroeffentlichen));
 }
 
 function adminWerkzeug() {

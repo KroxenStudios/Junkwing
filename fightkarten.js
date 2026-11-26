@@ -459,7 +459,7 @@ export const EIGENE = {
   erzeuge() { return this._dok ? (this._fertig ||= erzeugeKarte(this._dok, this.mitte, this.id)) : null; }
 };
 
-export function neueKarte(name = "Neue Karte") {
+export function neueKarte(name = globalThis.window?.WG?.lang === "en" ? "New map" : "Neue Karte") {
   return bereinigeKarte({
     v: 2, name, form: "huegel", seed: 1 + Math.floor(Math.random() * 9000), amp: 20, palette: null, hoehen: [],
     basen: [[-300, 0], [300, 0]], spawns: [[-480, 120], [-480, -120], [480, 120], [480, -120]],

@@ -1,4 +1,4 @@
-import "./killswitch.js";
+import { pruefeSperre } from "./killswitch.js";
 import * as THREE from "three";
 import RAPIER from "./lib/rapier.mjs";
 import * as BAU from "./bau.js";
@@ -43,6 +43,15 @@ const $ = s => document.querySelector(s);
 
 const EN = !!window.WG && WG.lang === "en";
 const TEXTE = {
+  "Auftrieb": "Lift",
+  "Ton": "Sound",
+  "Stumm": "Muted",
+  "nein": "no",
+  "ja": "yes",
+  "Andere Spieler dürfen steuern": "Other players may steer",
+  "Server-Physik nicht verfügbar: dein Fahrzeug wird lokal berechnet": "Server physics unavailable: your vehicle is simulated locally",
+  "Nur das Konto KroxenStudios darf die Welt bearbeiten": "Only the KroxenStudios account may edit the world",
+  "Ohne Gelände (welt.json) gibt es keinen Welt-Editor": "The world editor needs terrain (welt.json)",
   "Unfall": "Accident",
   "Runde": "Round",
   "Ergebnis": "Result",
@@ -4313,7 +4322,7 @@ async function verbinde() {
 
   const sock = socket;
   sock.addEventListener("open", async () => {
-    wiederverbinden = 0;
+    setTimeout(() => { if (sock.readyState === WebSocket.OPEN) wiederverbinden = 0; }, 8000);
     if (getrenntSeit) setTimeout(() => {
       if (sock.readyState !== WebSocket.OPEN || !getrenntSeit) return;
       const lange = Date.now() - getrenntSeit > 20000;
@@ -4338,7 +4347,6 @@ async function verbinde() {
     empfange(m);
   });
   const weg = ev => {
-    if (ev?.code === 1013) { location.reload(); return; }
     if (bewussterWechsel) {
       bewussterWechsel = false;
       wiederverbinden = 0;
@@ -4355,7 +4363,9 @@ async function verbinde() {
     npcs?.stop();
     for (const id of [...andere.keys()]) entferneAnderen(id);
     zeigeSpielerZahl();
-    if (wiederverbinden++ < 20) setTimeout(verbinde, Math.min(30000, 3000 * wiederverbinden));
+    const nochmal = () => { if (wiederverbinden++ < 20) setTimeout(verbinde, Math.min(30000, 3000 * wiederverbinden)); };
+    if (ev?.code === 1013) pruefeSperre().then(zu => zu || nochmal());
+    else nochmal();
   };
   socket.addEventListener("close", weg);
 }

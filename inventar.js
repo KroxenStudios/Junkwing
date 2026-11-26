@@ -8,13 +8,13 @@ export const SLOTS = 9;
 
 // stack: größte stapelgröße. name(d) gibt den anzeigenamen (de, en), kurz: beschriftung auf dem slot
 export const GEGENSTAENDE = {
-  hausschluessel: { de: d => `Hausschlüssel P${(d?.lot ?? 0) + 1}`, en: d => `House key P${(d?.lot ?? 0) + 1}`, kurz: "Haus", stack: 1, farbe: "#e5b84a", schluessel: true },
-  autoschluessel: { de: () => "Autoschlüssel", en: () => "Car key", kurz: "Auto", stack: 1, farbe: "#4a90e2", schluessel: true },
-  muenze: { de: () => "Münze", en: () => "Coin", kurz: "Münze", stack: 99, farbe: "#f2d230" },
-  kanister: { de: () => "Kanister", en: () => "Jerrycan", kurz: "Kanister", stack: 3, farbe: "#e5484d" },
-  reparaturset: { de: () => "Reparaturset", en: () => "Repair kit", kurz: "Repar.", stack: 5, farbe: "#3fae6a" },
-  werkzeug: { de: () => "Werkzeug", en: () => "Tool", kurz: "Werkz.", stack: 1, farbe: "#8a949e" },
-  notiz: { de: () => "Notiz", en: () => "Note", kurz: "Notiz", stack: 1, farbe: "#e8e4dc" }
+  hausschluessel: { de: d => `Hausschlüssel P${(d?.lot ?? 0) + 1}`, en: d => `House key P${(d?.lot ?? 0) + 1}`, kurz: "Haus", kurzEn: "House", stack: 1, farbe: "#e5b84a", schluessel: true },
+  autoschluessel: { de: () => "Autoschlüssel", en: () => "Car key", kurz: "Auto", kurzEn: "Car", stack: 1, farbe: "#4a90e2", schluessel: true },
+  muenze: { de: () => "Münze", en: () => "Coin", kurz: "Münze", kurzEn: "Coin", stack: 99, farbe: "#f2d230" },
+  kanister: { de: () => "Kanister", en: () => "Jerrycan", kurz: "Kanister", kurzEn: "Can", stack: 3, farbe: "#e5484d" },
+  reparaturset: { de: () => "Reparaturset", en: () => "Repair kit", kurz: "Repar.", kurzEn: "Repair", stack: 5, farbe: "#3fae6a" },
+  werkzeug: { de: () => "Werkzeug", en: () => "Tool", kurz: "Werkz.", kurzEn: "Tool", stack: 1, farbe: "#8a949e" },
+  notiz: { de: () => "Notiz", en: () => "Note", kurz: "Notiz", kurzEn: "Note", stack: 1, farbe: "#e8e4dc" }
 };
 export const GEGENSTAND_IDS = Object.keys(GEGENSTAENDE);
 
@@ -164,7 +164,7 @@ export function erzeugeInventarUi({ inv, L, en = () => false, aktionen = {} }) {
         title: g ? text(g) : L("leer", "empty"),
         onclick: () => beiKlick(i),
         onpointerenter: () => { tipp = g ? text(g) : ""; mitte.textContent = tipp || titel; }
-      }, el("i", {}), el("b", {}, art ? art.kurz : ""), g && g.n > 1 ? el("span", {}, String(g.n)) : "", el("u", {}, String(i + 1)));
+      }, el("i", {}), el("b", {}, art ? (globalThis.window?.WG?.lang === "en" ? art.kurzEn : art.kurz) : ""), g && g.n > 1 ? el("span", {}, String(g.n)) : "", el("u", {}, String(i + 1)));
       return b;
     });
     const mitte = el("div", { class: "radMitte" }, titel);

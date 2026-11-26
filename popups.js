@@ -74,6 +74,11 @@ export function zeigePopup(p) {
   naechstes();
 }
 
+export function schliessePopup(id) {
+  for (let i = schlange.length - 1; i >= 0; i--) if (schlange[i].id === id) schlange.splice(i, 1);
+  if (offen?.id === id) offen.zu();
+}
+
 export const merkeAusfall = () => merk.leg(AUSFALL, String(Date.now()));
 
 export async function pruefeNachricht(erlebt = false) {
@@ -83,8 +88,9 @@ export async function pruefeNachricht(erlebt = false) {
   const gemerkt = Date.now() - Number(merk.hol(AUSFALL) || 0) < 3 * TAG;
   merk.weg(AUSFALL);
   const n = stand.nachher;
-  if (n?.text && merk.hol(GESEHEN) !== String(n.id) && Date.now() - n.id < 7 * TAG) {
-    zeigePopup({ id: "nachher-" + n.id, titel: L("Neues vom Server", "Server news"), text: n.text, knopf: L("Alles klar", "Got it"), beimSchliessen: () => merk.leg(GESEHEN, String(n.id)) });
+  const botschaft = n && (window.WG?.lang === "en" ? n.textEn || n.text : n.text || n.textEn);
+  if (botschaft && merk.hol(GESEHEN) !== String(n.id) && Date.now() - n.id < 7 * TAG) {
+    zeigePopup({ id: "nachher-" + n.id, titel: L("Neues vom Server", "Server news"), text: botschaft, knopf: L("Alles klar", "Got it"), beimSchliessen: () => merk.leg(GESEHEN, String(n.id)) });
     return;
   }
   if (erlebt || gemerkt) {

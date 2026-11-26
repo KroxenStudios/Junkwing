@@ -16,7 +16,7 @@ async function status(ticket) {
   const r = await fetch(`${serverBasis()}/status${q}`, { cache: "no-store", signal: AbortSignal.timeout(4000) });
   if (r.status !== 503) return null;
   const j = await r.json().catch(() => ({}));
-  return j && j.killed ? String(j.message || "") : null;
+  return j && j.killed ? String((EN ? j.messageEn || j.message : j.message || j.messageEn) || "") : null;
 }
 
 async function pruefe() {
@@ -51,9 +51,21 @@ function zeigeSperre(text) {
   document.body.append(box);
 }
 
+function sperren(text) {
+  merkeAusfall();
+  if (!document.getElementById("killSperre")) zeigeSperre(text);
+}
+
+// nach einer trennung wird nur nachgefragt, nie neu geladen (sonst schleife)
+export async function pruefeSperre() {
+  const text = await pruefe();
+  if (text === null) return false;
+  sperren(text);
+  return true;
+}
+
 const sperre = await pruefe();
 if (sperre !== null) {
-  merkeAusfall();
-  zeigeSperre(sperre);
+  sperren(sperre);
   await new Promise(() => {});
 }

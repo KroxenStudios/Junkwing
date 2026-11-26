@@ -149,7 +149,7 @@ export function kollisionsQuader(doc) {
   return doc.hitbox && doc.hitbox.auto === false ? doc.hitbox.quader : doc.quader.map(q => q.slice(0, 6));
 }
 
-export function neuesHaus(name = "Mein Haus") {
+export function neuesHaus(name = globalThis.window?.WG?.lang === "en" ? "My house" : "Mein Haus") {
   return bereinigeHaus({
     format: FORMAT, v: VERSION, name, masse: [26, 20, 10],
     material: [{ id: 1, farbe: "#e8dfd0", textur: "putz" }, { id: 2, farbe: "#7a4a2e", textur: "holz" }, { id: 3, farbe: "#a07a4a", textur: "parkett" }, { id: 4, farbe: "#6e4b3a", textur: "ziegel" }, { id: 5, farbe: "#bfe3f2", textur: "glas" }],

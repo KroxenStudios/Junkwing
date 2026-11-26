@@ -182,8 +182,8 @@ export function erzeugeHaeuser({ scene, world, RAPIER, mat, textSprite }) {
   if (textSprite) {
     for (const lot of lotIds()) {
       const p = kleinerPlatz(lot);
-      const frei = textSprite(`Grundstück ${lot + 1} · frei`, { skala: 2.2, bg: "rgba(60,110,60,0.92)" });
-      const belegt = textSprite(`P${lot + 1} · Haus`, { skala: 2.2, bg: "rgba(20,60,160,0.92)" });
+      const frei = textSprite(globalThis.window?.WG?.lang === "en" ? `Plot ${lot + 1} · free` : `Grundstück ${lot + 1} · frei`, { skala: 2.2, bg: "rgba(60,110,60,0.92)" });
+      const belegt = textSprite(`P${lot + 1} · ${globalThis.window?.WG?.lang === "en" ? "House" : "Haus"}`, { skala: 2.2, bg: "rgba(20,60,160,0.92)" });
       for (const sp of [frei, belegt]) { sp.position.set(p.x - 6.9, p.y + 1.7, p.z + 6.4); scene.add(sp); }
       belegt.visible = false;
       schilder.push({ lot, frei, belegt });
