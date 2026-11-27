@@ -1989,6 +1989,7 @@ let joyX = 0, joyY = 0, joyPointer = null;
 let steuerKanaele = { nick: false, roll: false };
 const chatInput = $("#chatInput");
 const tippt = () => document.activeElement === chatInput;
+const istEingabe = el => !!el?.closest?.("input, textarea, select, [contenteditable]:not([contenteditable=false])");
 
 function setzeTouch(an) {
   touchModus = an;
@@ -2033,7 +2034,7 @@ addEventListener("keydown", e => {
     if (e.key === "Escape") chatInput.blur();
     return;
   }
-  if (document.activeElement && ["INPUT", "SELECT"].includes(document.activeElement.tagName)) {
+  if (istEingabe(document.activeElement)) {
     if (e.key !== "Escape") return;
     document.activeElement.blur();
   }
@@ -5202,7 +5203,6 @@ addEventListener("resize", () => {
 });
 for (const p of [rauch, feuer]) p.setzeSkala(innerHeight * renderer.getPixelRatio(), fov);
 
-const istEingabe = el => !!(el && el.closest && el.closest("input, textarea, select"));
 addEventListener("contextmenu", e => { if (!istEingabe(e.target)) e.preventDefault(); });
 document.addEventListener("selectstart", e => {
   const el = e.target.nodeType === 1 ? e.target : e.target.parentElement;

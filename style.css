@@ -1101,8 +1101,15 @@ body.hauseditor #hauptmenue, body.hauseditor #menueTint, body.hauseditor #invRad
 #hud #devBtn { height: 28px; padding: 0 10px; border: 0; border-radius: 7px; background: none; color: var(--accent); font-size: 12px; }
 #hud #devBtn:hover:not(:disabled) { background: #ffffff12; }
 #hud #devBtn:disabled { color: var(--muted); cursor: default; }
-#hud #devBtn[hidden], #raiBtn[hidden] { display: none; }
-#raiBtn { position: fixed; left: 10px; bottom: 10px; z-index: 20; height: 22px; padding: 0 7px; border: 1px solid var(--line); border-radius: 6px; background: var(--panel); color: var(--muted); font-size: 10px; letter-spacing: 0.08em; opacity: 0.38; transition: opacity 0.2s; }
+#game #hud button:not(#coinsBtn)[hidden], #raiBtn[hidden] { display: none; }
+#raiBtn { position: fixed; left: 10px; bottom: 58px; z-index: 20; width: 38px; height: 22px; padding: 0; border: 1px solid var(--line); border-radius: 6px; background: var(--panel); color: var(--muted); font-size: 10px; letter-spacing: 0.08em; opacity: 0.38; transition: opacity 0.2s; }
+body.bau #raiBtn { left: 274px; }
+body.touch #raiBtn { left: 6px; opacity: 0.75; }
+body.touch.bau #raiBtn { bottom: calc(var(--bar, 130px) + 54px); }
+@media (max-width: 760px) {
+  body.bau #raiBtn { left: 10px; bottom: 118px; }
+  body.touch.bau #raiBtn { bottom: calc(var(--bar, 130px) + 54px); }
+}
 #raiBtn:hover, #raiBtn:focus-visible { opacity: 1; color: var(--text); }
 body.menue #raiBtn { display: none; }
 .raiVorschau { width: 100%; max-height: 180px; object-fit: contain; border-radius: 8px; background: #000; }
