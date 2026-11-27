@@ -217,22 +217,22 @@ export function standardEinstellungen(typ, bauplan) {
     case "motor": return { ps: STANDARD_MOTOR_PS };
     case "turbo": return { druck: 0.8 };
     case "lader": return { druck: 0.5 };
-    case "nox": return { taste: "n", ps: 100, dauer: 12 };
+    case "nox": return { taste: "shift", ps: 100, dauer: 12 };
     case "lidar": return { messweite: 120, alarm: 8, farbe: "#2fe6ff" };
     case "radar": return { messweite: 250, farbe: "#ff9a2b" };
     case "gyro": return { farbe: "#a78bff" };
     case "hoehe": return { messweite: 400, alarm: 3, farbe: "#4dffb4" };
     case "kraft": return { alarm: 4, farbe: "#35f0a0" };
     case "unterboden": return { taste: "n", farbe: "#ff2bd6" };
-    case "strahler": return { taste: "m", farbe: "#e8f4ff" };
-    case "blinker": return { taste: "x", farbe: "#ffa31a" };
+    case "strahler": return { taste: "7", farbe: "#e8f4ff" };
+    case "blinker": return { taste: "8", farbe: "#ffa31a" };
     case "blaulicht": return { taste: "j", farbe: "#2f6bff" };
-    case "laser": return { taste: "c", farbe: "#ff2b2b", messweite: 60 };
+    case "laser": return { taste: "9", farbe: "#ff2b2b", messweite: 60 };
     case "funken": return { farbe: "#ffb347" };
     case "regenbogen": return {};
     case "staubspur": return { farbe: "#b59a73" };
     case "plasma": return { farbe: "#6fb7ff" };
-    case "konfetti": return { taste: "k" };
+    case "konfetti": return { taste: "0" };
     case "rauchwerfer": return { taste: "g", farbe: "#d9dde3" };
     case "fackel": return { taste: "h", farbe: "#ff5a2a" };
     case "stoersender": return { taste: "b", farbe: "#7dffb0" };
@@ -249,7 +249,7 @@ export function standardEinstellungen(typ, bauplan) {
     case "steuerflaeche": return { flaeche: 1.5, winkel: 25, kanal: "nick", plus: KANAL_TASTEN.nick[0], minus: KANAL_TASTEN.nick[1], gegenlauf: false };
     case "kamera": {
       const belegt = new Set((bauplan?.parts || []).filter(p => p.t === "kamera").map(p => p.k?.taste));
-      return { taste: ["v", "b", "n", "u", "i", "k"].find(t => !belegt.has(t)) || "v", fov: 70 };
+      return { taste: ["v", "b", "n", "u", "5", "6"].find(t => !belegt.has(t)) || "v", fov: 70 };
     }
     case "servo": return { plus: "e", minus: "q", winkel: 90, tempo: 90, modus: "winkel", haltekraft: 100, drehkraft: 100, richt: false };
     case "mikro": return { plus: "e", minus: "q", hoch: "arrowup", runter: "arrowdown", tempo: MIKRO_TEMPO, haltekraft: 100, drehkraft: 100, richt: false };
@@ -323,6 +323,8 @@ export function kompakt(plan) {
 }
 const ausKompakt = a => ({ t: a[0], x: a[1], y: a[2], z: a[3], o: a[4], c: a[5], k: a[6] });
 
+const ALT_BELEGT = { strahler: "m", blinker: "x", laser: "c", konfetti: "k" };
+
 export function bereinige(raw, opts = {}) {
   const parts = [];
   const used = new Set();
@@ -338,6 +340,7 @@ export function bereinige(raw, opts = {}) {
     const o = Math.trunc(Number(p.o));
     const c = typeof p.c === "string" && /^#[0-9a-f]{6}$/i.test(p.c) ? p.c : FARBEN[0];
     const k = { ...standardEinstellungen(p.t), ...bereinigeEinstellungen(p.t, p.k, !!opts.admin) };
+    if (k.taste && ALT_BELEGT[p.t] === k.taste) k.taste = standardEinstellungen(p.t).taste;
     used.add(key);
     parts.push({ t: p.t, x, y, z, o: o >= 0 && o < 24 ? o : 0, c, k });
   }

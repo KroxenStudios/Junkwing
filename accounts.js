@@ -44,7 +44,6 @@ const FEHLER = {
   nicht_verfuegbar: ["Gerade nicht verfügbar.", "Not available right now."],
   text_kurz: ["Bitte etwas mehr schreiben.", "Please write a bit more."],
   kein_entwickler: ["Kein aktiver Entwicklerzugang.", "No active developer access."],
-  bild_ungueltig: ["Der Screenshot ist ungültig oder zu groß.", "The screenshot is invalid or too large."],
   geschuetzt: ["Das Betreiber-Konto lässt sich hier nicht löschen.", "The operator account cannot be deleted here."],
   gesperrt: ["Dieses Konto wurde vom Moderator gesperrt.", "This account was suspended by a moderator."],
   blockiert: ["Du hast dieses Konto blockiert.", "You have blocked this account."],

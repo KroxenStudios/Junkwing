@@ -83,7 +83,7 @@ const TEXTE = {
   "Tragfläche": "Wing", "Steuerfläche": "Control surface", "Kamera": "Camera", "Fallschirm": "Parachute",
   "Stellmotor": "Servo motor", "Sollbruchstelle": "Breakaway joint", "Explosive": "Explosive", "Panzerblock": "Armoured block",
   "Sehr schwer und explosionssicher: Seine Verbindungen halten auch bei Sprengungen, und ein Körper mit Panzerblock wird nicht weggeschleudert.": "Very heavy and blast-proof: its connections hold even in explosions, and a body containing an armoured block is not thrown away.",
-  "Zünden": "Detonate", "Sprengen": "Detonate", "Reichweite": "Range", "Kraft": "Force",
+  "Sprengen": "Detonate", "Reichweite": "Range", "Kraft": "Force",
   "Einmal zünden: ein Blitz trennt alle Verbindungen im Umkreis (Reichweite in Metern) und drückt die Teile mit der eingestellten Kraft von der Ladung weg. Nach einem Neustart ist sie wieder scharf.": "Detonates once: a flash severs every connection within the range (in metres) and pushes the parts away from the charge with the set force. Armed again after a restart.",
   "Verkleidung": "Body", "Fahrer": "Driver", "Räder": "Wheels", "Effekte": "Effects", "Antrieb": "Drive",
   "Mechanik": "Mechanics", "Flug": "Flight", "Struktur": "Structure", "Kampf": "Combat",
@@ -198,7 +198,7 @@ const TEXTE = {
   "Reisebus": "Coach", "Raumrakete": "Space rocket", "Propellerflugzeug": "Propeller plane", "Feuerwehrauto": "Fire truck",
   "Propeller-Buggy": "Propeller buggy", "Zug mit zwei Wagen": "Train with two cars",
   "Scheinwerfer": "Headlight", "Leiter": "Ladder", "Propellermotor": "Propeller engine", "Treibstofftank": "Fuel tank",
-  "Lichtfarbe": "Light colour", "Gashebel +": "Throttle +", "Gashebel −": "Throttle −",
+  "Gashebel +": "Throttle +", "Gashebel −": "Throttle −",
   "Max. Fluggeschwindigkeit": "Max. airspeed", "Kapazität": "Capacity", "Verbrauch": "Fuel use",
   "Treibstoffverbrauch an/aus": "Fuel use on/off", "Treibstoffverbrauch an": "Fuel use on",
   "Treibstoffverbrauch aus (unbegrenzt)": "Fuel use off (unlimited)", "Tank leer": "Tank empty", "Kein Tank verbunden": "No tank connected", "Treibstoff": "Fuel", "Tank": "Tank",
@@ -221,7 +221,7 @@ const TEXTE = {
   "Engines Plus: Der Turbolader braucht Drehzahl und kommt mit kurzer Verzögerung, bringt dann viel Leistung. Er wirkt nur mit einem Motor-Baustein; jeder weitere zählt halb.": "Engines Plus: the turbocharger needs revs and arrives with a short delay, then adds a lot of power. It only works with an engine block; every further one counts half.",
   "Engines Plus: Der Kompressor drückt sofort, ohne Verzögerung, etwas schwächer als ein Turbo bei gleichem Druck. Er wirkt nur mit einem Motor-Baustein; jeder weitere zählt halb.": "Engines Plus: the supercharger pushes at once, without delay, a bit weaker than a turbo at the same pressure. It only works with an engine block; every further one counts half.",
   "Engines Plus: Taste halten und beim Gasgeben gibt es zusätzliche PS, bis die Flasche leer ist (ein Neustart füllt sie). Braucht einen Motor-Baustein.": "Engines Plus: hold the key while on the throttle for extra horsepower until the bottle is empty (restarting refills it). Needs an engine block.",
-  "Kampf": "Combat", "Motor": "Engine", "Geschütz": "Cannon", "Geschützverschluss": "Cannon breech", "Munitionslager": "Ammo rack",
+  "Motor": "Engine", "Geschütz": "Cannon", "Geschützverschluss": "Cannon breech", "Munitionslager": "Ammo rack",
   "Leistung": "Power", "Kaliber": "Calibre", "Geschossdurchmesser": "Shell diameter", "Fasst": "Holds", "Schuss": "rounds",
   "Schiessen": "Fire", "Haltekraft": "Holding force", "Drehkraft": "Turning force",
   "Karten laden / teilen": "Load / share maps", "Karteneditor": "Map editor", "Gewählte Karte bearbeiten": "Edit selected map",
@@ -1885,7 +1885,7 @@ function zeigeInspector() {
       taste("Trennen", "taste");
       break;
     case "explosive":
-      taste("Zünden", "taste");
+      taste("Sprengen", "taste");
       farbe("Lichtfarbe", "farbe");
       regler("Reichweite", "reichweite", 0.5, 30, 0.5, " m");
       regler("Kraft", "kraft", 1, 1000, 1, " kN");

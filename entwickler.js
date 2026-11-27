@@ -155,7 +155,11 @@ export function startEntwickler({ hud, bild, kontext }) {
       } catch (err) {
         senden.disabled = false;
         meldung.hidden = false;
-        meldung.textContent = err.message === "kein_entwickler" ? L("Dein Entwicklerzugang ist nicht (mehr) aktiv.", "Your developer access is not active (any more).") : Konto.fehlerText(err.message);
+        const eigene = {
+          kein_entwickler: L("Dein Entwicklerzugang ist nicht (mehr) aktiv.", "Your developer access is not active (any more)."),
+          bild_ungueltig: L("Der Screenshot ist ungültig oder zu gross.", "The screenshot is invalid or too large.")
+        };
+        meldung.textContent = eigene[err.message] || Konto.fehlerText(err.message);
         if (err.message === "kein_entwickler") { status = "keiner"; zeichne(); }
       }
     } }, text, vorschau,

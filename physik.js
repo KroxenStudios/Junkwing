@@ -15,7 +15,7 @@ export const gravFaktor = h => 1 - glatt(3000, 7000, h);
 
 const MOTOR_LEISTUNG = 55000;
 const MOTOR_KRAFT = 5200;
-const HOECHST_TEMPO = 32;
+const SCHUB_BASIS = 34;
 const FEDER_WEG = 0.2;
 const BREMSE = 60;
 
@@ -373,6 +373,37 @@ export function erzeugeFahrzeug(R, world, bauplan, opts = {}) {
   return veh;
 }
 
+function beruhige(koerper, sitz, v, dt) {
+  const bleibt = Math.exp(-dt * Math.min(18, (v - 90) / 15));
+  const schief = cross(quatRot(sitz.rb.rotation(), [0, 1, 0]), [0, 1, 0]);
+  const zurueck = Math.min(9, (v - 90) / 25) * dt;
+  for (const b of koerper) {
+    const w = b.rb.angvel();
+    b.rb.setAngvel({ x: w.x * bleibt + schief[0] * zurueck, y: w.y, z: w.z * bleibt + schief[2] * zurueck }, true);
+  }
+}
+
+function nachschieben(veh, v, ml, gas, radKraft, dt) {
+  const angetrieben = veh.bodies.filter(b => !veh.angetrieben.size || veh.angetrieben.has(b.index));
+  const amBoden = angetrieben.some(b => b.vc && b.raeder.some(r => r.antrieb && b.vc.wheelIsInContact(r.w)));
+  const sitz = sitzKoerper(veh);
+  veh.haftung = amBoden ? 0.8 : Math.max(0, (veh.haftung || 0) - dt);
+  if (!sitz || !veh.haftung) return;
+  if (v > 90) beruhige(angetrieben, sitz, v, dt);
+  if (!amBoden) return;
+  const masse = fahrzeugMasse(veh);
+  const ende = SCHUB_BASIS * ml ** 0.86;
+  const rest = Math.max(0, 1 - v / ende);
+  const soll = ml > 1 && rest > 0 ? masse * (0.05 * v + Math.min(30, 2 + ml) * rest) * gas : 0;
+  const dreh = sitz.rb.rotation();
+  const vor = quatRot(dreh, veh.vorwaerts);
+  const zusatz = Math.max(0, soll - radKraft);
+  for (const b of angetrieben) {
+    const teil = (b.rb.mass() / masse) * dt;
+    b.rb.applyImpulse(vec(scale(vor, zusatz * teil)), true);
+  }
+}
+
 export function weiteGrenze(world, einheit = 5) {
   const p = world.integrationParameters;
   p.lengthUnit = einheit;
@@ -558,11 +589,13 @@ export function steuere(world, veh, eingabe, dt) {
   if (gas !== 0) gas *= entnimm(veh, Math.max(0, veh.ana.sitzBody), 0.15 * ml * Math.abs(gas) * dt);
 
   const mf = veh.motorFaktor || 1;
-  const hoechst = HOECHST_TEMPO * (ml > 1 ? ml ** 0.6 : 0.5 + 0.5 * ml);
   let kraft = 0, bremsen = eingabe.bremse ? BREMSE * mf : 0;
   if (gas > 0) {
     if (v < -0.8) bremsen = Math.max(bremsen, BREMSE * mf * gas);
-    else if (v < hoechst) kraft = Math.min(MOTOR_KRAFT * mf * ml, (MOTOR_LEISTUNG * mf * ml) / Math.max(Math.abs(v), 1)) * gas;
+    else {
+      kraft = Math.min(MOTOR_KRAFT * mf * ml, (MOTOR_LEISTUNG * mf * ml) / Math.max(Math.abs(v), 1), fahrzeugMasse(veh) * 14) * gas;
+      nachschieben(veh, v, ml, gas, kraft, dt);
+    }
   } else if (gas < 0) {
     if (v > 0.8) bremsen = Math.max(bremsen, BREMSE * mf * -gas);
     else if (v > -9) kraft = MOTOR_KRAFT * mf * ml * 0.45 * gas;
