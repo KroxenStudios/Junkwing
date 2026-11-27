@@ -26,7 +26,7 @@ export class RaumPhysik {
   constructor(R, weltDaten = null) {
     this.R = R;
     this.welt = weltDaten;
-    this.world = new R.World({ x: 0, y: -9.81, z: 0 });
+    this.world = PH.weiteGrenze(new R.World({ x: 0, y: -9.81, z: 0 }));
     this.fahrzeuge = new Map();
     this.karten = new Map();
     this.akku = 0;

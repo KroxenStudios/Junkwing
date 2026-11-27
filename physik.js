@@ -373,6 +373,14 @@ export function erzeugeFahrzeug(R, world, bauplan, opts = {}) {
   return veh;
 }
 
+export function weiteGrenze(world, einheit = 5) {
+  const p = world.integrationParameters;
+  p.lengthUnit = einheit;
+  p.normalizedAllowedLinearError /= einheit;
+  p.normalizedPredictionDistance /= einheit;
+  return world;
+}
+
 export function motorFaktor(veh) {
   let hat = false, summe = 0;
   veh.plan.parts.forEach((p, i) => {
@@ -550,7 +558,7 @@ export function steuere(world, veh, eingabe, dt) {
   if (gas !== 0) gas *= entnimm(veh, Math.max(0, veh.ana.sitzBody), 0.15 * ml * Math.abs(gas) * dt);
 
   const mf = veh.motorFaktor || 1;
-  const hoechst = HOECHST_TEMPO * Math.min(1.5, 0.5 + 0.5 * ml);
+  const hoechst = HOECHST_TEMPO * (ml > 1 ? ml ** 0.6 : 0.5 + 0.5 * ml);
   let kraft = 0, bremsen = eingabe.bremse ? BREMSE * mf : 0;
   if (gas > 0) {
     if (v < -0.8) bremsen = Math.max(bremsen, BREMSE * mf * gas);

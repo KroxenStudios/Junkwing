@@ -413,7 +413,7 @@ const feuer = new Partikel(scene, 3000, true);
 
 await RAPIER.init();
 $("#laden").hidden = true;
-const world = new RAPIER.World({ x: 0, y: -9.81, z: 0 });
+const world = PH.weiteGrenze(new RAPIER.World({ x: 0, y: -9.81, z: 0 }));
 
 const LOT_K = 5;
 const LOT_ANZAHL = 20;
@@ -5249,6 +5249,10 @@ function kameraFahr(dt) {
     anderer.obj.getWorldPosition(blick);
     blick.y += 0.9;
   }
+  const sprung = fahrKamera.vorher ? blick.clone().sub(fahrKamera.vorher) : null;
+  (fahrKamera.vorher ||= new THREE.Vector3()).copy(blick);
+  const mitziehen = sprung && dt > 0 && sprung.length() < 2500 * dt ? THREE.MathUtils.smoothstep(sprung.length() / dt, 60, 150) : 0;
+  if (mitziehen) for (const k of [fahrKamera.blick, fahrKamera.pos]) k.addScaledVector(sprung, mitziehen);
   fahrKamera.blick.lerp(blick, fahrKamera.blick.lengthSq() ? Math.min(1, dt * 12) : 1);
   const soll = new THREE.Vector3(
     fahrKamera.blick.x + Math.sin(yaw) * Math.cos(p) * dist,
