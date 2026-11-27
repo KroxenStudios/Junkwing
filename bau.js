@@ -281,7 +281,7 @@ export const PAKET_TEILE = {
   gadgets: ["rauchwerfer", "fackel", "stoersender", "schild", "feuerloescher"]
 };
 export const PAKET_NAMEN = {
-  engines: ["Engines", "Engines"],
+  engines: ["Engines Plus", "Engines Plus"],
   neon: ["Neon", "Neon"],
   spuren: ["Spuren-Effekte", "Trail effects"],
   gadgets: ["Gadgets", "Gadgets"],
