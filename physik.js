@@ -1,4 +1,5 @@
 
+import { anbauten, traegeNach, ladeFaktor, glut } from "./motorwerk.js";
 import {
   TEILE, ORIENT, ZELLE, RAD_TIEFE, analysiere, zellMitte, teilAchse, radRadius, matVec, sprengZiele,
   STANDARD_MOTOR_PS, munitionKapazitaet, teilMasse, MIKRO_TEMPO, MIKRO_NEIGUNG
@@ -385,7 +386,34 @@ export function motorFaktor(veh) {
 }
 
 export function motorPS(veh) {
-  return Math.round(motorFaktor(veh) * STANDARD_MOTOR_PS);
+  return Math.round(veh.psJetzt ?? motorFaktor(veh) * STANDARD_MOTOR_PS);
+}
+
+function aufladen(veh, eingabe, grund, dt) {
+  const teile = veh.plan.parts;
+  const heil = i => !veh.zerstoert.has(i) && !(veh.angetrieben.size && !veh.angetrieben.has(veh.ana.bodyOf[i]));
+  const hatMotor = grund > 0 && teile.some((p, i) => p.t === "motor" && heil(i));
+  const last = veh.motorAn && hatMotor ? Math.abs(eingabe.gas) : 0;
+  veh.spool = traegeNach(veh.spool || 0, last, dt);
+  veh.noxRest ||= new Map();
+  const a = anbauten(teile, i => hatMotor && teile[i].t !== "nox" && heil(i));
+  let schuss = 0;
+  const spritzt = [];
+  teile.forEach((p, i) => {
+    if (p.t !== "nox" || !last || eingabe.gas <= 0 || !heil(i) || !eingabe.tasten?.has(p.k?.taste)) return;
+    const rest = veh.noxRest.get(i) ?? p.k?.dauer ?? 12;
+    if (rest <= 0) return;
+    veh.noxRest.set(i, rest - dt);
+    schuss += p.k?.ps ?? 100;
+    spritzt.push(i);
+  });
+  const druck = last ? ladeFaktor(a, veh.spool) : 1;
+  const gesamt = grund * druck + schuss / STANDARD_MOTOR_PS;
+  veh.psJetzt = gesamt * STANDARD_MOTOR_PS;
+  for (const i of spritzt) veh.fx.set(i, 1);
+  const feuer = last > 0.5 ? glut(druck) : 0;
+  if (feuer) teile.forEach((p, i) => { if ((p.t === "turbo" || p.t === "lader") && heil(i)) veh.fx.set(i, feuer); });
+  return gesamt;
 }
 
 export function fahrzeugMasse(veh) {
@@ -517,7 +545,7 @@ export function steuere(world, veh, eingabe, dt) {
   }
 
   const v = tempo(veh);
-  const ml = motorFaktor(veh);
+  const ml = aufladen(veh, eingabe, motorFaktor(veh), dt);
   let gas = veh.motorAn && ml > 0 ? eingabe.gas : 0;
   if (gas !== 0) gas *= entnimm(veh, Math.max(0, veh.ana.sitzBody), 0.15 * ml * Math.abs(gas) * dt);
 
@@ -989,7 +1017,7 @@ const ART_WERTE = [
 export function artVon(veh, n) {
   return veh.geschossArt.get(n) ?? Math.max(0, ARTEN.indexOf(veh.plan.parts[n].k.geschoss));
 }
-const KAMPF_TEILE = new Set(["motor", "geschuetz", "verschluss", "tank", "munition", "schnellfeuer"]);
+const KAMPF_TEILE = new Set(["motor", "turbo", "lader", "nox", "geschuetz", "verschluss", "tank", "munition", "schnellfeuer"]);
 const NAHLAGER_FAKTOR = 0.5;
 
 function angrenzend(a, b) {

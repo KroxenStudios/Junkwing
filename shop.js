@@ -75,7 +75,7 @@ async function kaufen(p) {
   }
 }
 
-const TEIL_EN = { lidar: "Lidar dome", radar: "Tracking radar", gyro: "Gyro sphere", hoehe: "Radar altimeter", kraft: "G-force crystal",
+const TEIL_EN = { turbo: "Turbocharger", lader: "Supercharger", nox: "NOx bottle", lidar: "Lidar dome", radar: "Tracking radar", gyro: "Gyro sphere", hoehe: "Radar altimeter", kraft: "G-force crystal",
   unterboden: "Underglow", strahler: "Floodlight", blinker: "Hazard blinker", blaulicht: "Beacon", laser: "Laser beam",
   funken: "Spark trail", regenbogen: "Rainbow exhaust", staubspur: "Dust plume", plasma: "Plasma trail", konfetti: "Confetti cannon",
   rauchwerfer: "Smoke launcher", fackel: "Flare", stoersender: "Jammer", schild: "Shield generator", feuerloescher: "Fire extinguisher" };
@@ -113,7 +113,7 @@ function pakete() {
       el("div", {}, el("b", { textContent: p.name[EN() ? 1 : 0] }), el("br"), el("small", { textContent: p.descr[EN() ? 1 : 0] }),
         ...(p.fx ? [effektWahl(p)] : []),
         ...(PAKET_TEILE[p.id] ? [
-          el("div", { class: "shopTeile" }, ...PAKET_TEILE[p.id].map(t => el("span", { textContent: EN() ? (TEIL_EN[t] || t) : (TEILE[t]?.name || t) }))),
+          el("div", { class: "shopTeile" }, ...(p.id === "engines" ? [el("span", { textContent: L("Prüfstand", "Test bench") })] : []), ...PAKET_TEILE[p.id].map(t => el("span", { textContent: EN() ? (TEIL_EN[t] || t) : (TEILE[t]?.name || t) }))),
           el("button", { type: "button", class: "shopVorschau", textContent: "👁 " + L("Vorschau im Spiel", "Preview in game"), onclick: () => { dialog.close(); window.dispatchEvent(new CustomEvent("krox-vorschau", { detail: { pack: p.id } })); } })
         ] : [])),
       p.owned

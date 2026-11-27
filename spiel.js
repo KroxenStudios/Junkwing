@@ -23,6 +23,8 @@ import { startShop } from "./shop.js";
 import { sitzRechte, filtereEingabe, fremdeEingabe, mischeEingaben } from "./eingabe.js";
 import { messeSensoren, animiereSensoren, erzeugeSensorHud } from "./sensorik.js";
 import { richtMotoren, richtTasten } from "./zielen.js";
+import { flammenAus } from "./motorwerk.js";
+import { startPruefstand } from "./pruefstand.js";
 import { erzeugeRunde } from "./kampfrunde.js";
 import { startHilfe } from "./hilfe.js";
 import { setzePlaetze, plaetzeListe, lotIds, erzeugeHaeuser, kleinerPlatz, hausPos, KLEIN_K, VARIANTEN as HAUS_DEFS, EIGEN as HAUS_EIGEN } from "./haus.js";
@@ -215,6 +217,10 @@ const TEXTE = {
   "Schnellfeuerkanone": "Rapid-fire cannon", "Dauerfeuer": "Rapid fire", "Wandstärke": "Wall thickness",
   "Schnellfeuerkanone: Rohr und Verschluss in einem, feuert entlang ihrer Oberseite rund neun Schuss pro Sekunde, solange du die Taste hältst. Kaliber 25–40 mm, die Geschosse schlagen kaum durch und machen wenig Schaden, treffen aber oft. Sie braucht ein Munitionslager mit gleichem Kaliber am selben festen Fahrzeugteil (jede Geschossart).":
     "Rapid-fire cannon: barrel and breech in one, fires along its top face at about nine rounds per second while you hold the key. Calibre 25–40 mm; the rounds barely penetrate and do little damage, but hit often. It needs an ammo rack of the same calibre on the same rigid part of the vehicle (any shell type). Fight mode only.",
+  "Tuning": "Tuning", "Turbolader": "Turbocharger", "Kompressor": "Supercharger", "NOx-Flasche": "NOx bottle", "Prüfstand": "Test bench", "Prüfstand starten": "Start test bench", "Ladedruck": "Boost pressure", "Einspritzen (halten)": "Inject (hold)", "Mehrleistung": "Extra power", "Vorrat": "Supply",
+  "Engines: Der Turbolader braucht Drehzahl und kommt mit kurzer Verzögerung, bringt dann viel Leistung. Er wirkt nur mit einem Motor-Baustein; jeder weitere zählt halb.": "Engines: the turbocharger needs revs and arrives with a short delay, then adds a lot of power. It only works with an engine block; every further one counts half.",
+  "Engines: Der Kompressor drückt sofort, ohne Verzögerung, etwas schwächer als ein Turbo bei gleichem Druck. Er wirkt nur mit einem Motor-Baustein; jeder weitere zählt halb.": "Engines: the supercharger pushes at once, without delay, a bit weaker than a turbo at the same pressure. It only works with an engine block; every further one counts half.",
+  "Engines: Taste halten und beim Gasgeben gibt es zusätzliche PS, bis die Flasche leer ist (ein Neustart füllt sie). Braucht einen Motor-Baustein.": "Engines: hold the key while on the throttle for extra horsepower until the bottle is empty (restarting refills it). Needs an engine block.",
   "Kampf": "Combat", "Motor": "Engine", "Geschütz": "Cannon", "Geschützverschluss": "Cannon breech", "Munitionslager": "Ammo rack",
   "Leistung": "Power", "Kaliber": "Calibre", "Geschossdurchmesser": "Shell diameter", "Fasst": "Holds", "Schuss": "rounds",
   "Schiessen": "Fire", "Haltekraft": "Holding force", "Drehkraft": "Turning force",
@@ -1139,10 +1145,25 @@ for (const [name, typen] of gruppenListe) {
     };
     box.append(b);
   }
+  if (name === "Tuning") {
+    const b = document.createElement("button");
+    b.type = "button";
+    b.id = "btnPruefstand";
+    b.textContent = b.title = tr("Prüfstand");
+    b.dataset.paket = "engines";
+    b.onclick = () => {
+      if (!darfPruefstand()) return paketWarnung(["engines"]);
+      PRUEFSTAND.oeffne();
+    };
+    box.append(b);
+  }
   palette.append(box);
 }
 function paketBesessen(id) {
   return !!Konto.stand.owned?.has(id);
+}
+function darfPruefstand() {
+  return istAdminKonto || paketBesessen("engines");
 }
 function aktualisiereSperren() {
   for (const b of palette.querySelectorAll("button[data-paket]")) b.classList.toggle("gesperrt", !paketBesessen(b.dataset.paket));
@@ -1335,6 +1356,17 @@ function zielenAktualisieren(dt) {
   }
 }
 
+const PRUEFSTAND = startPruefstand({ wurzel: game, plan: () => plan, melde: t => meldung(t) });
+function aufDemStand(dt) {
+  if (!PRUEFSTAND.offen()) return;
+  if (modus !== "bau" || MENUE.offen()) return PRUEFSTAND.schliesse();
+  const lauf = PRUEFSTAND.takt(dt);
+  if (!lauf || !bauGrafik) return;
+  for (const [i, r] of bauGrafik.raeder) if (!r.bock && plan.parts[i]?.k.antrieb !== false) r.spin.rotation.y -= lauf.radTempo * dt;
+  bauGrafik.groups.forEach(g => g.updateMatrixWorld());
+  emitEffekte("stand", plan, bauGrafik, lauf.fx, dt);
+}
+
 window.addEventListener("krox-vorschau", e => starteVorschau(e.detail?.pack));
 window.addEventListener("keydown", e => { if (e.key === "Escape") beendeVorschau(); });
 
@@ -1459,7 +1491,7 @@ $("#btnLeeren").onclick = () => {
 
 const inspector = $("#inspector");
 const inspInhalt = $("#inspInhalt");
-const BESCHRIFTBAR = ["nebel", "duese", "rakete", "servo", "mikro", "bruch", "fallschirm", "kamera", "steuerflaeche", "scheinwerfer", "propeller", "explosive",
+const BESCHRIFTBAR = ["nox", "nebel", "duese", "rakete", "servo", "mikro", "bruch", "fallschirm", "kamera", "steuerflaeche", "scheinwerfer", "propeller", "explosive",
   "unterboden", "strahler", "blinker", "blaulicht", "laser", "konfetti", "rauchwerfer", "fackel", "stoersender", "schild", "feuerloescher"];
 let inspAuswahl = [];
 let tastenWarten = null;
@@ -1718,6 +1750,15 @@ function zeigeInspector() {
     case "motor":
       regler("Leistung", "ps", 20, 1500, 10, " PS");
       break;
+    case "turbo":
+    case "lader":
+      regler("Ladedruck", "druck", 0.2, 2, 0.1, " bar");
+      break;
+    case "nox":
+      taste("Einspritzen (halten)", "taste");
+      regler("Mehrleistung", "ps", 25, 500, 25, " PS");
+      regler("Vorrat", "dauer", 3, 60, 1, " s");
+      break;
     case "geschuetz":
       regler("Kaliber", "kaliber", 25, 155, 5, " mm");
       break;
@@ -1891,6 +1932,9 @@ function zeigeInspector() {
     panzer: "Sehr schwer und explosionssicher: Seine Verbindungen halten auch bei Sprengungen, und ein Körper mit Panzerblock wird nicht weggeschleudert.",
     explosive: "Einmal zünden: ein Blitz trennt alle Verbindungen im Umkreis (Reichweite in Metern) und drückt die Teile mit der eingestellten Kraft von der Ladung weg. Nach einem Neustart ist sie wieder scharf.",
     motor: "Treibt die Räder an, egal wo er im Fahrzeug sitzt. Die Leistung stellst du in PS ein (150 PS entsprechen dem bisherigen Antrieb). Mehrere Motoren addieren ihre Leistung, mehr Leistung verbraucht mehr Treibstoff. Bei einem Treffer im Fight-Modus ist er kaputt. Ohne Motor-Baustein fährt das Fahrzeug mit Standardleistung.",
+    turbo: "Engines: Der Turbolader braucht Drehzahl und kommt mit kurzer Verzögerung, bringt dann viel Leistung. Er wirkt nur mit einem Motor-Baustein; jeder weitere zählt halb.",
+    lader: "Engines: Der Kompressor drückt sofort, ohne Verzögerung, etwas schwächer als ein Turbo bei gleichem Druck. Er wirkt nur mit einem Motor-Baustein; jeder weitere zählt halb.",
+    nox: "Engines: Taste halten und beim Gasgeben gibt es zusätzliche PS, bis die Flasche leer ist (ein Neustart füllt sie). Braucht einen Motor-Baustein.",
     geschuetz: "Rohr eines Geschützes. Es feuert von seinem Verschluss weg (Verschluss an die Rückseite bauen). Kaliber 25–155 mm. Ist das Rohr zerstört, fliegen Geschosse langsamer und streuen mehr.",
     verschluss: "Schiesst durch das Rohr, das an ihm sitzt. Ist das Geschoss dicker als das Kaliber, geht es im Rohr los; ist es dünner, fliegt es langsamer und ungenauer. Bei einem Treffer ist er kaputt, dann geht kein Schuss mehr. Die Geschossart (HE, AP, HEAT) stellst du ein, eine zweite Taste schaltet sie im Spiel um.",
     schnellfeuer: "Schnellfeuerkanone: Rohr und Verschluss in einem, feuert entlang ihrer Oberseite rund neun Schuss pro Sekunde, solange du die Taste hältst. Kaliber 25–40 mm, die Geschosse schlagen kaum durch und machen wenig Schaden, treffen aber oft. Sie braucht ein Munitionslager mit gleichem Kaliber am selben festen Fahrzeugteil (jede Geschossart).",
@@ -1918,6 +1962,14 @@ function zeigeInspector() {
     gemischt: "Gemischte Teile: nur Farbe und Entfernen gelten für alle."
   }[hinweisText] || "");
   if (hinweis.textContent) inspInhalt.append(hinweis);
+  if (gleich && (p.t === "motor" || BAU.PAKET_TEILE.engines.includes(p.t)) && darfPruefstand()) {
+    const b = document.createElement("button");
+    b.type = "button";
+    b.className = "pruefKnopf";
+    b.textContent = tr("Prüfstand starten");
+    b.onclick = () => { schliesseInspector(); PRUEFSTAND.oeffne(); };
+    inspInhalt.append(b);
+  }
 
   const weg = document.createElement("button");
   weg.type = "button";
@@ -3319,6 +3371,7 @@ function baueTastenListe() {
   const joystickTasten = new Set();
   plan.parts.forEach((p, i) => {
     switch (p.t) {
+      case "nox": add(p.k.taste, "NOx", p.k.name); break;
       case "nebel": add(p.k.taste, "Nebel", p.k.name); break;
       case "duese": add(p.k.taste, "Triebwerk", p.k.name); break;
       case "rakete": add(p.k.taste, "Rakete", p.k.name); raketen.push(i); break;
@@ -3743,8 +3796,17 @@ function ruckeKamera(pos, staerke, grenze) {
   kameraRuck = Math.max(kameraRuck, staerke * (1 - abstand / grenze));
 }
 
+function auspuffFeuer(wo, richtung, art, tempo) {
+  const blau = art.blau && Math.random() < 0.5;
+  const farbton = blau ? 0.6 + Math.random() * 0.04 : art.blau ? 0.045 + Math.random() * 0.035 : Math.random() * 0.13;
+  tmpVel.copy(richtung).multiplyScalar((blau ? 1.8 : art.blau ? 6.5 : 4.5) + Math.random() * 2.5 * tempo).add(new THREE.Vector3(zuf(0.7), zuf(0.5), zuf(0.7)));
+  const gross = (blau ? 0.18 : 0.22) + 0.2 * art.staerke;
+  feuer.emit(wo, tmpVel, tmpFarbe.setHSL(farbton, 1, blau ? 0.42 : 0.4 + Math.random() * 0.12), gross, 0.05, (blau ? 0.09 : 0.18) + Math.random() * 0.14 * art.staerke, blau ? 0.85 : 0.68);
+}
+
 function emitEffekte(besitzer, planX, grafik, fx, dt) {
   if (!grafik) return;
+  const brand = flammenAus(planX.parts, fx);
   for (const [i, staerke] of fx) {
     const p = planX.parts[i];
     const e = grafik.emit.get(i);
@@ -3777,6 +3839,11 @@ function emitEffekte(besitzer, planX, grafik, fx, dt) {
     }
     akku += rate * dt;
     const zufall = s => (Math.random() - 0.5) * s;
+    if (brand && p.t === "auspuff") {
+      let glimmt = (fxAkku.get(key + ":f") || 0) + (45 + 105 * brand.staerke) * dt;
+      for (; glimmt >= 1; glimmt--) auspuffFeuer(tmpV.clone().addScaledVector(tmpD, Math.random() * 0.12), tmpD, brand, brand.staerke);
+      fxAkku.set(key + ":f", glimmt);
+    }
     if (p.t === "feuerloescher" && brennende.length) {
       const meine = new Set(grafik.teilObj.values());
       for (let b = brennende.length - 1; b >= 0; b--) if (meine.has(brennende[b].obj)) brennende.splice(b, 1);
@@ -3812,7 +3879,7 @@ function emitEffekte(besitzer, planX, grafik, fx, dt) {
         rauch.emit(pos, tmpVel, tmpFarbe.set("#f4f8ff"), 0.15, 1.1, 0.9 + Math.random() * 0.5, 0.75, -0.4);
       } else if (p.t === "auspuff") {
         tmpVel.copy(tmpD).multiplyScalar(1.5 + staerke * 2).add(new THREE.Vector3(zufall(0.4), 0.3, zufall(0.4)));
-        rauch.emit(pos, tmpVel, tmpFarbe.set(p.k.farbe || "#5b5f66"), 0.12, 0.7 + staerke * 0.5, 1.1 + Math.random() * 0.6, 0.55, 0.6);
+        rauch.emit(pos, tmpVel, tmpFarbe.set(p.k.farbe || "#5b5f66"), 0.12, 0.7 + staerke * 0.5, 1.1 + Math.random() * 0.6, brand ? 0.25 : 0.55, 0.6);
       } else if (p.t === "nebel") {
         tmpVel.copy(tmpD).multiplyScalar(2.2).add(new THREE.Vector3(zufall(0.8), zufall(0.4), zufall(0.8)));
         rauch.emit(pos, tmpVel, tmpFarbe.set(p.k.farbe || "#e8f0ff"), 0.3, 2.6, 3.2 + Math.random() * 1.5, 0.5, 0.25);
@@ -5106,6 +5173,7 @@ function schleife(zeit) {
   }
 
   aktualisiereVorschau(performance.now() / 1000);
+  aufDemStand(dt);
   aktualisiereNamen(performance.now() / 1000);
   scene.updateMatrixWorld();
 

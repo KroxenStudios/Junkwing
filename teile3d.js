@@ -275,6 +275,41 @@ export function teilModell(p, nb = null) {
       g.add(box(ZELLE - 0.04, ZELLE - 0.12, ZELLE - 0.04, farbe));
       break;
     }
+    case "turbo": {
+      const alu = mat("#c9ced6", CHROM);
+      g.add(box(0.4, 0.16, 0.4, farbe, 0, -0.17));
+      const schnecke = new THREE.Mesh(geo("schnecke", () => new THREE.TorusGeometry(0.13, 0.075, 10, 26, Math.PI * 1.75)), alu);
+      schnecke.position.set(0, 0.04, 0.02);
+      g.add(schnecke);
+      const mund = zyl(0.09, 0.07, 0.2, mat(DUNKEL), 0, 0.04, 0.1);
+      mund.rotation.x = Math.PI / 2;
+      g.add(mund, zyl(0.05, 0.05, 0.16, alu, 0.14, 0.17, 0.02, 12));
+      break;
+    }
+    case "lader": {
+      const alu = mat("#c9ced6", CHROM);
+      g.add(box(0.42, 0.22, 0.46, farbe, 0, -0.12));
+      for (const sx of [-0.1, 0.1]) {
+        const walze = zyl(0.095, 0.095, 0.44, alu, sx, 0.04, 0, 16);
+        walze.rotation.x = Math.PI / 2;
+        g.add(walze);
+      }
+      g.add(box(0.24, 0.09, 0.2, mat(DUNKEL), 0, 0.17, -0.03));
+      const scheibe = zyl(0.08, 0.08, 0.04, mat(DUNKEL), 0, -0.08, 0.235, 18);
+      scheibe.rotation.x = Math.PI / 2;
+      g.add(scheibe);
+      break;
+    }
+    case "nox": {
+      const lack = mat(c === "#1a1c20" ? "#1f6fe0" : c, { roughness: 0.35, metalness: 0.25 });
+      for (const sz of [-0.15, 0.13]) g.add(box(0.34, 0.1, 0.06, mat(DUNKEL), 0, -0.19, sz));
+      const flasche = zyl(0.15, 0.15, 0.36, lack, 0, -0.02, -0.03, 20);
+      const hals = zyl(0.05, 0.13, 0.07, lack, 0, -0.02, 0.185, 16);
+      const ventil = zyl(0.035, 0.035, 0.05, mat("#c9ced6", CHROM), 0, -0.02, 0.222, 10);
+      for (const t of [flasche, hals, ventil]) t.rotation.x = Math.PI / 2;
+      g.add(flasche, hals, ventil);
+      break;
+    }
     case "verschluss": {
       const stahl = mat("#2b2f36", { metalness: 0.1, roughness: 0.7 });
       g.add(box(ZELLE - 0.004, ZELLE - 0.004, ZELLE - 0.004, farbe));

@@ -86,7 +86,7 @@ export const FACE_VEC = {
   pz: [0, 0, 1], nz: [0, 0, -1]
 };
 
-export const GRUPPEN_REIHENFOLGE = ["Struktur", "Sitz", "Antrieb", "Mechanik", "Sensorik", "Neon", "Spuren", "Gadgets", "Kampf"];
+export const GRUPPEN_REIHENFOLGE = ["Struktur", "Sitz", "Antrieb", "Tuning", "Mechanik", "Sensorik", "Neon", "Spuren", "Gadgets", "Kampf"];
 
 export const TEILE = {
   wand:     { name: "Dünne Wand", art: "anbau", faces: ["ny"], masse: 4, gruppe: "Struktur" },
@@ -118,6 +118,9 @@ export const TEILE = {
   bruch:    { name: "Sollbruchstelle", art: "anbau", faces: ["ny", "py"], masse: 8, gruppe: "Mechanik", gelenk: "bruch" },
   explosive: { name: "Explosive", art: "anbau", faces: ["ny"], masse: 10, gruppe: "Mechanik" },
   motor:    { name: "Motor", art: "bau", faces: ALLE, masse: 40, gruppe: "Antrieb" },
+  turbo:    { name: "Turbolader", art: "bau", faces: ALLE, masse: 18, gruppe: "Tuning" },
+  lader:    { name: "Kompressor", art: "bau", faces: ALLE, masse: 26, gruppe: "Tuning" },
+  nox:      { name: "NOx-Flasche", art: "bau", faces: ALLE, masse: 14, gruppe: "Tuning" },
   lidar:    { name: "Lidar-Kuppel", art: "anbau", faces: ["ny"], masse: 6, gruppe: "Sensorik" },
   radar:    { name: "Ortungsradar", art: "anbau", faces: ["ny"], masse: 8, gruppe: "Sensorik" },
   gyro:     { name: "Gyro-Kugel", art: "anbau", faces: ["ny"], masse: 5, gruppe: "Sensorik" },
@@ -181,12 +184,13 @@ export const MIKRO_NEIGUNG = 15;
 export const RAD_GROESSEN = { S: 0.22, M: 0.32, L: 0.45 };
 export const GRENZEN = {
   winkel: [0, 180], schub: [0, 100000], dauer: [0.1, 3600], flaeche: [0, 1000], fov: [1, 170], kapazitaet: [1, 1000000], tempo: [0, 10000],
-  reichweite: [0.5, 50], kraft: [0, 100000], ps: [20, 1500], kaliber: [25, 155], durchmesser: [25, 155],
+  reichweite: [0.5, 50], kraft: [0, 100000], ps: [20, 1500], druck: [0.2, 2], kaliber: [25, 155], durchmesser: [25, 155],
   haltekraft: [0, 100000], drehkraft: [0, 100000], staerke: [20, 300], auftrieb: [0, 1000], messweite: [5, 1000], alarm: [0, 1000]
 };
 
 export const SITZ_RECHTE = [["fahren", "Fahren (WASD, Bremse)"], ["flug", "Flug (Triebwerke, Ruder)"], ["kampf", "Kampf (Geschütze)"], ["mechanik", "Mechanik & Extras"]];
 export const RECHTE_GRUPPE = {
+  nox: "fahren",
   duese: "flug", rakete: "flug", propeller: "flug", steuerflaeche: "flug",
   geschuetz: "kampf", verschluss: "kampf", schnellfeuer: "kampf",
   servo: "mechanik", mikro: "mechanik", bruch: "mechanik", fallschirm: "mechanik", kamera: "mechanik", nebel: "mechanik", explosive: "mechanik", scheinwerfer: "mechanik",
@@ -211,6 +215,9 @@ export function standardEinstellungen(typ, bauplan) {
     case "propeller": return { plus: "g", minus: "h", schub: 4, tempo: 80 };
     case "tank": return { kapazitaet: 60 };
     case "motor": return { ps: STANDARD_MOTOR_PS };
+    case "turbo": return { druck: 0.8 };
+    case "lader": return { druck: 0.5 };
+    case "nox": return { taste: "n", ps: 100, dauer: 12 };
     case "lidar": return { messweite: 120, alarm: 8, farbe: "#2fe6ff" };
     case "radar": return { messweite: 250, farbe: "#ff9a2b" };
     case "gyro": return { farbe: "#a78bff" };
@@ -267,12 +274,14 @@ export const PAKET_FARBEN = {
 };
 
 export const PAKET_TEILE = {
+  engines: ["turbo", "lader", "nox"],
   sensorik: ["lidar", "radar", "gyro", "hoehe", "kraft"],
   neon: ["unterboden", "strahler", "blinker", "blaulicht", "laser"],
   spuren: ["funken", "regenbogen", "staubspur", "plasma", "konfetti"],
   gadgets: ["rauchwerfer", "fackel", "stoersender", "schild", "feuerloescher"]
 };
 export const PAKET_NAMEN = {
+  engines: ["Engines", "Engines"],
   neon: ["Neon", "Neon"],
   spuren: ["Spuren-Effekte", "Trail effects"],
   gadgets: ["Gadgets", "Gadgets"],
@@ -368,6 +377,7 @@ function bereinigeEinstellungen(typ, k, admin = false) {
   set("kraft", zahl(k.kraft, ...GRENZEN.kraft));
   set("ps", zahl(k.ps ?? (Number.isFinite(Number(k.leistung)) ? Number(k.leistung) * PS_PRO_LEISTUNG : undefined), ...GRENZEN.ps));
   set("kaliber", zahl(k.kaliber, ...GRENZEN.kaliber));
+  set("druck", typ === "turbo" || typ === "lader" ? zahl(k.druck, ...GRENZEN.druck) : undefined);
   set("durchmesser", zahl(k.durchmesser, ...GRENZEN.durchmesser));
   set("geschoss", GESCHOSS_ARTEN.includes(k.geschoss) ? k.geschoss : undefined);
   set("auftrieb", typ === "helium" ? zahl(k.auftrieb, ...GRENZEN.auftrieb) : undefined);

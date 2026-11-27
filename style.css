@@ -1127,3 +1127,27 @@ body.menue #raiBtn { display: none; }
 .jwPopup button.leise { justify-self: start; padding: 0; background: none; color: var(--muted); font-size: 12px; text-decoration: underline; }
 @keyframes jwRein { from { opacity: 0; transform: translateY(-8px); } }
 @media (prefers-reduced-motion: reduce) { .jwPopup { animation: none; } }
+
+.pruefstand { position: absolute; z-index: 7; bottom: 14px; right: 10px; width: min(370px, calc(100vw - 20px)); max-height: calc(100% - 130px); overflow: auto; box-sizing: border-box; padding: 12px 14px; border: 1px solid var(--line); border-radius: 12px; background: var(--panel-solid); color: var(--text); pointer-events: auto; box-shadow: 0 18px 50px #000a; }
+.pruefstand header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+.pruefZu { border: 0; background: none; color: var(--muted); font-size: 16px; cursor: pointer; }
+.pruefWerte { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+.pruefZelle { padding: 6px 8px; border-radius: 8px; background: #ffffff0d; }
+.pruefZelle small { display: block; color: var(--muted); font-size: 11px; }
+.pruefZelle b { font-size: 22px; font-variant-numeric: tabular-nums; }
+.pruefZelle i { margin-left: 4px; font-style: normal; font-size: 11px; color: var(--muted); }
+.pruefZelle.ps b { color: #ffb347; }
+.pruefZelle.nm b { color: #4aa3ff; }
+.pruefKurve { display: block; width: 100%; height: auto; margin: 8px 0; border-radius: 8px; background: #05080d; }
+.pruefLeiste { display: flex; gap: 6px; }
+.pruefLeiste button, .pruefLeiste select, .pruefKnopf { padding: 8px 12px; border: 1px solid var(--line); border-radius: 8px; background: #ffffff14; color: var(--text); cursor: pointer; }
+.pruefLeiste .primaer { flex: 1; background: var(--accent); color: #2a1700; font-weight: 600; }
+.pruefLeiste select option { color: #000; }
+.pruefLeiste .pruefNox.an { background: #1f6fe0; border-color: #6fb2ff; }
+.pruefLeiste button:disabled { opacity: 0.4; cursor: not-allowed; }
+.pruefSpitze { margin: 8px 0 0; font-size: 12px; color: var(--muted); }
+.pruefSpitze:empty { display: none; }
+.pruefKnopf { width: 100%; margin: 0 0 8px; }
+body.menue .pruefstand { display: none; }
+body.touch .pruefstand { top: 46px; bottom: auto; max-height: calc(100% - 56px - var(--bar, 130px)); }
+@media (max-width: 560px) { .pruefstand { padding: 8px 10px; } .pruefZelle { padding: 3px 7px; } .pruefZelle b { font-size: 16px; } .pruefKurve { height: 64px; margin: 6px 0; } }
